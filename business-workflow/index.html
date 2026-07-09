@@ -1,0 +1,3965 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>业务对象工作流：从人工发起到可配置、可追踪的流程体验</title>
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@4.6.0/fonts/remixicon.css" rel="stylesheet">
+  <style>
+    @font-face {
+      font-family: "PortfolioBrand";
+      src: url("../assets/fonts/erya-xindahei-bold.ttf") format("truetype");
+      font-weight: 800;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    :root {
+      --ink: #111111;
+      --body: #374151;
+      --muted: #6b7280;
+      --soft: #898989;
+      --line: #e5e7eb;
+      --hairline: #e5e7eb;
+      --line-soft: #f3f4f6;
+      --hairline-soft: #f3f4f6;
+      --canvas: #ffffff;
+      --surface: #f8f9fa;
+      --surface-soft: #f8f9fa;
+      --card: #f5f5f5;
+      --surface-card: #f5f5f5;
+      --strong: #e5e7eb;
+      --blue: #3b82f6;
+      --green: #10b981;
+      --orange: #f59e0b;
+      --red: #ef4444;
+      --violet: #8b5cf6;
+      --radius-sm: 8px;
+      --radius-md: 8px;
+      --radius: 12px;
+      --radius-lg: 16px;
+      --radius-xl: 16px;
+      --radius-pill: 9999px;
+      --shadow: 0 1px 2px rgba(0, 0, 0, .05), 0 18px 50px rgba(17, 17, 17, .07);
+      --max: 1200px;
+      --flow-wire: #d1d5db;
+      --flow-blue: #3b82f6;
+      --flow-text: rgba(0, 0, 0, .85);
+      --flow-sub: rgba(0, 20, 50, .65);
+      --flow-start: #f5f5f5;
+      --flow-action: #eff6ff;
+      --flow-page: #ffffff;
+      --flow-decision: #fffbeb;
+      --flow-danger: #ef4444;
+      font-family: Inter, "Aptos", "Segoe UI", "PingFang SC", "Microsoft YaHei UI", sans-serif;
+      color-scheme: light;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; background: var(--canvas); }
+    body {
+      margin: 0;
+      min-width: 320px;
+      color: var(--ink);
+      background: var(--canvas);
+      letter-spacing: 0;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      background:
+        linear-gradient(180deg, rgba(248, 249, 250, .92), rgba(255, 255, 255, 0) 440px),
+        radial-gradient(circle at 84% 8%, rgba(59, 130, 246, .08), transparent 260px);
+      pointer-events: none;
+    }
+
+    a { color: inherit; text-decoration: none; }
+    img, iframe { display: block; max-width: 100%; }
+    button, a { -webkit-tap-highlight-color: transparent; }
+
+    .nav {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: rgba(255, 255, 255, .86);
+      border-bottom: 1px solid var(--line-soft);
+      backdrop-filter: blur(18px);
+    }
+
+    .nav-inner {
+      width: min(var(--max), calc(100% - 40px));
+      min-height: 64px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-family: "PortfolioBrand", Inter, "PingFang SC", "Microsoft YaHei UI", sans-serif;
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing: -.02em;
+      white-space: nowrap;
+    }
+
+    .brand-logo {
+      width: 24px;
+      height: 24px;
+      flex: 0 0 auto;
+      display: block;
+      object-fit: contain;
+      filter: brightness(0);
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px;
+      background: var(--surface);
+      border-radius: var(--radius-sm);
+    }
+
+    .nav-links a {
+      padding: 8px 14px;
+      border-radius: var(--radius-sm);
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 600;
+      transition: color .2s ease, background .2s ease, box-shadow .2s ease;
+    }
+
+    .nav-links a:hover,
+    .nav-links a:focus-visible,
+    .nav-links a.is-active {
+      color: var(--ink);
+      background: var(--canvas);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, .05);
+      outline: 0;
+    }
+
+    .nav-action {
+      min-height: 34px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 14px;
+      border-radius: var(--radius-sm);
+      color: #fff;
+      background: var(--ink);
+      font-size: 13px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .section {
+      width: min(var(--max), calc(100% - 40px));
+      margin: 0 auto;
+      padding: 92px 0;
+    }
+
+    .hero {
+      width: min(var(--max), calc(100% - 40px));
+      margin: 0 auto;
+      min-height: calc(100dvh - 64px);
+      padding: 74px 0 70px;
+      display: grid;
+      grid-template-columns: minmax(0, 1.02fr) minmax(360px, .98fr);
+      gap: clamp(32px, 6vw, 76px);
+      align-items: center;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      width: max-content;
+      margin-bottom: 18px;
+      padding: 6px 12px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, .72);
+      color: var(--body);
+      font-size: 13px;
+      font-weight: 650;
+    }
+
+    .eyebrow::before {
+      content: "";
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--blue);
+    }
+
+    h1, h2, h3, p { margin-top: 0; }
+    p,
+    .section-desc,
+    .problem-item p,
+    .hypothesis-item p,
+    .confirm-item p,
+    .result-conclusion,
+    .method-card p,
+    .process-step p,
+    .note-card p,
+    .decision p,
+    .card p,
+    .caption {
+      text-wrap: pretty;
+      overflow-wrap: normal;
+      word-break: normal;
+    }
+    h1, h2, .display {
+      font-family: "Arial Rounded MT Bold", Inter, "Aptos", "PingFang SC", sans-serif;
+      font-weight: 700;
+      letter-spacing: -.04em;
+    }
+
+    h1 {
+      max-width: 760px;
+      margin-bottom: 14px;
+      font-size: clamp(44px, 6vw, 72px);
+      line-height: 1.02;
+    }
+
+    .split-parent {
+      display: block;
+      overflow: hidden;
+    }
+
+    .split-parent .split-line {
+      display: block;
+      overflow: hidden;
+    }
+
+    .split-parent .split-char {
+      display: inline-block;
+      will-change: transform, opacity;
+    }
+
+    .split-parent.is-split-ready .split-char {
+      opacity: 0;
+      transform: translate3d(0, .68em, 0);
+    }
+
+    .split-parent.is-split-visible .split-char {
+      opacity: 1;
+      transform: translate3d(0, 0, 0);
+      transition:
+        opacity .72s cubic-bezier(.16, 1, .3, 1),
+        transform .82s cubic-bezier(.16, 1, .3, 1);
+      transition-delay: calc(var(--char-index, 0) * 18ms);
+    }
+
+    .hero-subtitle {
+      max-width: 720px;
+      margin: 0 0 22px;
+      color: var(--body);
+      font-size: clamp(18px, 1.7vw, 22px);
+      line-height: 1.42;
+      letter-spacing: 0;
+      font-weight: 600;
+    }
+
+    .hero-lead {
+      max-width: 660px;
+      margin-bottom: 28px;
+      color: var(--body);
+      font-size: 18px;
+      line-height: 1.72;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 34px;
+    }
+
+    .btn {
+      min-height: 42px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 18px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      background: var(--canvas);
+      color: var(--ink);
+      font-size: 14px;
+      font-weight: 700;
+      transition: transform .18s ease, box-shadow .18s ease, background .18s ease;
+    }
+
+    .btn.primary {
+      border-color: var(--ink);
+      background: var(--ink);
+      color: #fff;
+    }
+
+    .btn:hover,
+    .btn:focus-visible {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 18px rgba(17, 17, 17, .08);
+      outline: 0;
+    }
+
+    .meta-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .meta-item {
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, .72);
+    }
+
+    .meta-item span {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 650;
+    }
+
+    .meta-item b {
+      display: block;
+      font-size: 15px;
+      line-height: 1.35;
+    }
+
+    .hero-card {
+      position: relative;
+      min-height: 500px;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      box-shadow: none;
+      overflow: visible;
+      isolation: isolate;
+    }
+
+    .hero-showcase {
+      position: relative;
+      width: min(620px, 100%);
+      min-height: 440px;
+      margin-left: auto;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-rows: auto minmax(0, 1fr) auto;
+      gap: 10px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      background: var(--surface);
+      box-shadow: 0 1px 2px rgba(0,0,0,.05), 0 18px 42px rgba(17,17,17,.06);
+    }
+
+    .hero-showcase::before {
+      content: "";
+      position: absolute;
+      inset: 28px 34px 36px;
+      z-index: -1;
+      border-radius: 28px;
+      background: rgba(59, 130, 246, .06);
+      filter: blur(24px);
+    }
+
+    .showcase-path {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 1px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      background: var(--line);
+    }
+
+    .showcase-path span {
+      min-width: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 10px 8px;
+      background: var(--canvas);
+      color: var(--body);
+      font-size: 11px;
+      font-weight: 700;
+      line-height: 1.35;
+      text-align: center;
+      white-space: nowrap;
+      transition: background .18s ease, color .18s ease;
+    }
+
+    .showcase-path span:hover {
+      background: var(--surface);
+      color: var(--ink);
+    }
+
+    .showcase-path i,
+    .showcase-window-bar i,
+    .showcase-node i,
+    .showcase-select i,
+    .showcase-badge i,
+    .showcase-action i,
+    .showcase-validation i,
+    .showcase-summary i {
+      flex: none;
+      display: inline-grid;
+      place-items: center;
+      width: 16px;
+      height: 16px;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1;
+      font-weight: 400;
+    }
+
+    .showcase-workspace {
+      grid-column: 1 / -1;
+      grid-row: 2;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--canvas);
+      box-shadow: 0 1px 2px rgba(0,0,0,.035);
+    }
+
+    .showcase-window-bar {
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 0 14px;
+      border-bottom: 1px solid var(--line);
+      background: var(--canvas);
+    }
+
+    .showcase-window-bar b {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      color: var(--ink);
+      font-size: 15px;
+      letter-spacing: 0;
+    }
+
+    .showcase-window-bar span {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 650;
+    }
+
+    .showcase-panel {
+      display: grid;
+      grid-template-columns: 146px minmax(0, 1fr);
+      min-height: 286px;
+      background: var(--surface);
+    }
+
+    .showcase-node-list {
+      display: grid;
+      align-content: start;
+      gap: 7px;
+      padding: 12px;
+      border-right: 1px solid var(--line);
+      background: var(--canvas);
+    }
+
+    .showcase-node {
+      display: grid;
+      gap: 4px;
+      padding: 9px 10px;
+      border: 1px solid var(--line-soft);
+      border-radius: var(--radius-sm);
+      background: var(--surface);
+      color: var(--body);
+      font-size: 11px;
+      line-height: 1.35;
+      transition: border-color .18s ease, background .18s ease, box-shadow .18s ease, transform .18s ease;
+    }
+
+    .showcase-node b {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--ink);
+      font-size: 12px;
+    }
+
+    .showcase-node.active i {
+      color: var(--blue);
+    }
+
+    .showcase-node.active {
+      border-color: rgba(59, 130, 246, .30);
+      background: #eff6ff;
+    }
+
+    .showcase-node:hover {
+      border-color: #d1d5db;
+      background: var(--canvas);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, .04);
+      transform: translateY(-1px);
+    }
+
+    .showcase-editor {
+      display: grid;
+      align-content: start;
+      gap: 10px;
+      padding: 14px;
+    }
+
+    .showcase-toolbar {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .showcase-select {
+      min-height: 30px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 0 10px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      background: var(--canvas);
+      color: var(--ink);
+      font-size: 12px;
+      font-weight: 720;
+      transition: border-color .18s ease, background .18s ease, box-shadow .18s ease;
+    }
+
+    .showcase-select:hover {
+      border-color: #d1d5db;
+      background: var(--surface);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, .04);
+    }
+
+    .showcase-member-grid {
+      display: grid;
+      gap: 7px;
+    }
+
+    .showcase-member {
+      display: grid;
+      grid-template-columns: 74px minmax(0, 1fr) 30px;
+      gap: 10px;
+      align-items: center;
+      min-height: 60px;
+      padding: 9px 10px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      background: var(--canvas);
+      color: var(--body);
+      font-size: 11px;
+      transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+    }
+
+    .showcase-member.compact {
+      grid-template-columns: minmax(0, 1fr) 30px;
+    }
+
+    .showcase-member:hover {
+      border-color: #d1d5db;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, .04);
+      transform: translateY(-1px);
+    }
+
+    .showcase-badge {
+      width: max-content;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 7px;
+      border-radius: var(--radius-pill);
+      font-weight: 760;
+      white-space: nowrap;
+    }
+
+    .showcase-badge.ready i { color: #047857; }
+    .showcase-badge.check i { color: #1d4ed8; }
+    .showcase-badge.warn i { color: #b45309; }
+
+    .showcase-badge.ready { background: #ecfdf5; color: #047857; }
+    .showcase-badge.check { background: #eff6ff; color: #1d4ed8; }
+    .showcase-badge.warn { background: #fffbeb; color: #b45309; }
+
+    .showcase-chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    .showcase-chip {
+      display: inline-flex;
+      align-items: center;
+      min-height: 22px;
+      padding: 0 7px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-pill);
+      background: var(--surface);
+      color: var(--body);
+      font-weight: 650;
+      white-space: nowrap;
+      transition: border-color .18s ease, background .18s ease, color .18s ease;
+    }
+
+    .showcase-chip:hover {
+      border-color: #d1d5db;
+      background: var(--canvas);
+      color: var(--ink);
+    }
+
+    .showcase-action {
+      width: 30px;
+      min-height: 28px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      background: var(--canvas);
+      color: var(--ink);
+      font-size: 0;
+      font-weight: 760;
+      white-space: nowrap;
+      transition: border-color .18s ease, background .18s ease, color .18s ease, box-shadow .18s ease, transform .18s ease;
+    }
+
+    .showcase-action i {
+      width: 16px;
+      height: 16px;
+      font-size: 16px;
+    }
+
+    .showcase-member:first-child .showcase-action {
+      border-color: var(--ink);
+      background: var(--ink);
+      color: #fff;
+    }
+
+    .showcase-member:first-child .showcase-action i {
+      color: #fff;
+    }
+
+    .showcase-action:hover {
+      border-color: var(--ink);
+      background: var(--ink);
+      color: #fff;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, .08);
+      transform: translateY(-1px);
+    }
+
+    .showcase-action:hover i {
+      color: #fff;
+    }
+
+    .showcase-validation {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      min-height: 36px;
+      padding: 6px 10px;
+      border: 1px solid #fde68a;
+      border-radius: var(--radius-sm);
+      background: #fffbeb;
+      color: #92400e;
+      font-size: 11px;
+      line-height: 1.45;
+      transition: border-color .18s ease, background .18s ease;
+    }
+
+    .showcase-validation:hover {
+      border-color: #f59e0b;
+      background: #fff7ed;
+    }
+
+    .showcase-validation span {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      min-width: 0;
+    }
+
+    .showcase-validation i {
+      color: #b45309;
+    }
+
+    .showcase-validation b {
+      flex: none;
+      padding: 4px 7px;
+      border-radius: var(--radius-sm);
+      background: rgba(245, 158, 11, .12);
+      font-size: 11px;
+      line-height: 1;
+      white-space: nowrap;
+    }
+
+    .showcase-summary {
+      grid-column: 1 / -1;
+      grid-row: 3;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 1px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      background: var(--line);
+    }
+
+    .showcase-summary span {
+      min-height: 50px;
+      display: grid;
+      grid-template-columns: 20px minmax(0, 1fr);
+      align-content: center;
+      align-items: center;
+      gap: 3px;
+      padding: 9px 10px;
+      background: var(--canvas);
+      color: var(--body);
+      font-size: 11px;
+      line-height: 1.35;
+      transition: background .18s ease, color .18s ease;
+    }
+
+    .showcase-summary b {
+      color: var(--ink);
+      font-size: 12px;
+    }
+
+    .showcase-summary span > i {
+      grid-row: 1 / span 2;
+      width: 18px;
+      height: 18px;
+      color: var(--ink);
+      font-size: 16px;
+    }
+
+    .showcase-summary span:hover {
+      background: var(--surface);
+      color: var(--ink);
+    }
+
+    .target-cursor-wrapper {
+      position: fixed;
+      left: 0;
+      top: 0;
+      z-index: 9999;
+      width: 0;
+      height: 0;
+      pointer-events: none;
+      opacity: 0;
+      transform: translate3d(-100px, -100px, 0);
+      transition: opacity .18s ease-out;
+      mix-blend-mode: difference;
+    }
+
+    .target-cursor-wrapper.is-visible {
+      opacity: 1;
+    }
+
+    .target-cursor-dot {
+      position: absolute;
+      left: -3px;
+      top: -3px;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #fff;
+      transition: transform .18s ease-out, opacity .18s ease-out;
+    }
+
+    .target-cursor-wrapper.is-targeting .target-cursor-dot {
+      transform: scale(.68);
+      opacity: .86;
+    }
+
+    .target-cursor-corner {
+      position: absolute;
+      width: 13px;
+      height: 13px;
+      border-color: #fff;
+      border-style: solid;
+      border-width: 0;
+      transform: translate3d(0, 0, 0);
+      will-change: transform;
+    }
+
+    .target-cursor-corner.corner-tl {
+      border-top-width: 2px;
+      border-left-width: 2px;
+    }
+
+    .target-cursor-corner.corner-tr {
+      border-top-width: 2px;
+      border-right-width: 2px;
+    }
+
+    .target-cursor-corner.corner-br {
+      border-right-width: 2px;
+      border-bottom-width: 2px;
+    }
+
+    .target-cursor-corner.corner-bl {
+      border-left-width: 2px;
+      border-bottom-width: 2px;
+    }
+
+    body.target-cursor-enabled,
+    body.target-cursor-enabled a,
+    body.target-cursor-enabled button,
+    body.target-cursor-enabled .cursor-target {
+      cursor: none !important;
+    }
+
+    .mock-window {
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+    }
+
+    .window-bar {
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      border-bottom: 1px solid var(--line);
+      background: var(--canvas);
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 650;
+    }
+
+    .dots {
+      display: inline-flex;
+      gap: 6px;
+    }
+
+    .dots i {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--strong);
+    }
+
+    .product-fragment {
+      padding: 20px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .flow-row {
+      display: grid;
+      grid-template-columns: 116px 1fr auto;
+      gap: 14px;
+      align-items: center;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--canvas);
+    }
+
+    .status {
+      width: max-content;
+      padding: 5px 10px;
+      border-radius: 999px;
+      background: #ecfdf5;
+      color: #047857;
+      font-size: 12px;
+      font-weight: 750;
+    }
+
+    .status.warn { background: #fffbeb; color: #b45309; }
+    .status.need { background: #eff6ff; color: #1d4ed8; }
+
+    .people {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      color: var(--body);
+      font-size: 13px;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      min-height: 26px;
+      padding: 0 10px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--surface);
+      font-weight: 650;
+    }
+
+    .mini-action {
+      padding: 8px 10px;
+      border-radius: var(--radius-sm);
+      background: var(--ink);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 750;
+    }
+
+    .section-head {
+      max-width: 760px;
+      margin-bottom: 34px;
+    }
+
+    .section-head.center {
+      margin-right: auto;
+      margin-left: auto;
+      text-align: center;
+    }
+
+    .kicker {
+      margin-bottom: 12px;
+      color: var(--blue);
+      font-size: 13px;
+      font-weight: 750;
+    }
+
+    h2 {
+      margin-bottom: 16px;
+      font-size: clamp(32px, 4.8vw, 54px);
+      line-height: 1.08;
+    }
+
+    .section-desc {
+      margin-bottom: 0;
+      color: var(--body);
+      font-size: 17px;
+      line-height: 1.72;
+    }
+
+    .soft-band {
+      width: 100%;
+      background: var(--surface);
+      border-top: 1px solid var(--line-soft);
+      border-bottom: 1px solid var(--line-soft);
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .card {
+      min-height: 100%;
+      padding: 28px;
+      border-radius: var(--radius);
+      background: var(--card);
+    }
+
+    .story-board {
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(280px, .8fr);
+      gap: 18px;
+      align-items: stretch;
+    }
+
+    .story-panel {
+      position: relative;
+      overflow: hidden;
+      min-height: 360px;
+      padding: 34px;
+      border-radius: var(--radius-lg);
+      background: var(--ink);
+      color: #fff;
+    }
+
+    .story-panel::after {
+      content: "";
+      position: absolute;
+      right: -120px;
+      bottom: -140px;
+      width: 360px;
+      height: 360px;
+      border-radius: 50%;
+      background: rgba(59, 130, 246, .24);
+      filter: blur(3px);
+    }
+
+    .story-panel h3 {
+      position: relative;
+      z-index: 1;
+      max-width: 560px;
+      margin-bottom: 18px;
+      font-size: clamp(30px, 4vw, 48px);
+      line-height: 1.08;
+      letter-spacing: -.035em;
+    }
+
+    .story-panel p {
+      position: relative;
+      z-index: 1;
+      max-width: 620px;
+      color: rgba(255, 255, 255, .76);
+      font-size: 16px;
+      line-height: 1.75;
+    }
+
+    .story-list {
+      display: grid;
+      gap: 14px;
+    }
+
+    .story-mini {
+      padding: 22px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--canvas);
+      transition: background .18s ease, border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+    }
+
+    .story-mini:hover {
+      border-color: #d1d5db;
+      background: var(--surface);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, .04);
+      transform: translateY(-1px);
+    }
+
+    .story-mini b {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 17px;
+    }
+
+    .card.white {
+      border: 1px solid var(--line);
+      background: var(--canvas);
+    }
+
+    .card h3 {
+      margin-bottom: 12px;
+      font-size: 20px;
+      line-height: 1.35;
+      letter-spacing: -.01em;
+    }
+
+    .card p,
+    .card li {
+      color: var(--body);
+      font-size: 15px;
+      line-height: 1.68;
+    }
+
+    .card p:last-child { margin-bottom: 0; }
+
+    .tag {
+      display: inline-flex;
+      margin-bottom: 18px;
+      padding: 5px 11px;
+      border-radius: 999px;
+      background: var(--canvas);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 750;
+    }
+
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .metric {
+      padding: 24px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--canvas);
+    }
+
+    .metric-label {
+      margin-bottom: 12px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .metric-value {
+      margin-bottom: 8px;
+      font-size: clamp(30px, 4vw, 46px);
+      line-height: 1;
+      font-weight: 800;
+      letter-spacing: -.04em;
+    }
+
+    .metric-note {
+      color: var(--body);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .metric.blue .metric-value { color: var(--blue); }
+    .metric.green .metric-value { color: var(--green); }
+    .metric.orange .metric-value { color: var(--orange); }
+    .metric.violet .metric-value { color: var(--violet); }
+
+
+    .research-story {
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      background: var(--canvas);
+      box-shadow: 0 1px 2px rgba(0,0,0,.04);
+    }
+
+    .research-row-title span,
+    .problem-item span,
+    .confirm-item span {
+      display: inline-grid;
+      place-items: center;
+      min-width: 30px;
+      height: 30px;
+      margin-bottom: 16px;
+      border-radius: var(--radius-sm);
+      background: var(--surface-card);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 850;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .research-row {
+      display: grid;
+      grid-template-columns: 220px minmax(0, 1fr);
+      border-top: 1px solid var(--line);
+    }
+
+    .research-row-title {
+      min-width: 0;
+      padding: 28px 24px;
+      border-right: 1px solid var(--line);
+      background: var(--canvas);
+    }
+
+    .research-row-title span {
+      display: inline-flex;
+      width: auto;
+      padding: 0 9px;
+      white-space: nowrap;
+    }
+
+    .research-row-title h3 {
+      margin: 0;
+      color: var(--ink);
+      font-size: 21px;
+      line-height: 1.25;
+      letter-spacing: 0;
+      text-align: left;
+      word-break: keep-all;
+    }
+
+    .research-row-title p {
+      margin: 10px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.55;
+      text-wrap: pretty;
+    }
+
+    .research-row-body {
+      min-width: 0;
+      padding: 28px;
+      background: var(--canvas);
+    }
+
+    .research-row.alt .research-row-body {
+      background: var(--surface);
+    }
+
+    .research-insight-grid {
+      display: grid;
+      grid-template-columns: minmax(300px, .9fr) minmax(360px, 1.1fr);
+      gap: 1px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--line);
+    }
+
+    .insight-block,
+    .question-block {
+      min-width: 0;
+      padding: 24px;
+      background: var(--canvas);
+    }
+
+    .insight-block {
+      background: var(--surface);
+    }
+
+    .insight-block span,
+    .question-block .overline,
+    .study-note-label,
+    .metric-label-mini {
+      display: block;
+      margin-bottom: 14px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.3;
+      font-weight: 850;
+      letter-spacing: 0;
+    }
+
+    .insight-block h3 {
+      max-width: 560px;
+      margin: 0 0 12px;
+      color: var(--ink);
+      font-size: clamp(22px, 1.75vw, 28px);
+      line-height: 1.24;
+      letter-spacing: 0;
+      word-break: normal;
+      text-wrap: balance;
+    }
+
+    .insight-block p {
+      margin: 0;
+      color: var(--body);
+      font-size: 14px;
+      line-height: 1.65;
+      text-wrap: pretty;
+    }
+
+    .question-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(190px, 1fr));
+      gap: 8px;
+    }
+
+    .question-pill {
+      display: grid;
+      grid-template-columns: 26px minmax(0, 1fr);
+      gap: 10px;
+      align-items: center;
+      min-width: 0;
+      min-height: 44px;
+      padding: 10px;
+      border-radius: var(--radius-sm);
+      background: var(--surface-card);
+      color: var(--body);
+      font-size: 13px;
+      line-height: 1.35;
+      font-weight: 650;
+      word-break: keep-all;
+    }
+
+    .question-pill i {
+      display: grid;
+      place-items: center;
+      width: 24px;
+      height: 24px;
+      border-radius: var(--radius-sm);
+      background: var(--canvas);
+      color: var(--muted);
+      font-style: normal;
+      font-size: 11px;
+      font-weight: 850;
+    }
+
+    .source-evidence {
+      display: grid;
+      grid-template-columns: minmax(280px, .82fr) minmax(280px, 1.18fr);
+      align-items: stretch;
+      gap: 1px;
+      margin-top: 14px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--line);
+    }
+
+    .research-row-body > .source-evidence:first-child {
+      margin-top: 0;
+    }
+
+    .overview-questions,
+    .overview-conclusion {
+      margin-top: 14px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+    }
+
+    .overview-questions {
+      background: var(--canvas);
+    }
+
+    .overview-conclusion {
+      padding: 24px;
+      background: var(--surface);
+    }
+
+    .source-shot,
+    .source-notes {
+      min-width: 0;
+      background: var(--canvas);
+    }
+
+    .source-shot {
+      display: grid;
+      align-items: center;
+      gap: 12px;
+      padding: 14px;
+      background: var(--surface);
+    }
+
+    .source-shot-title {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: baseline;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.4;
+      font-weight: 750;
+    }
+
+    .source-shot-title b {
+      color: var(--ink);
+      font-size: 15px;
+      line-height: 1.35;
+      letter-spacing: 0;
+    }
+
+    .source-shot img {
+      display: block;
+      width: 100%;
+      height: auto;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      background: var(--canvas);
+    }
+
+    .source-notes {
+      display: grid;
+      align-content: center;
+      gap: 8px;
+      padding: 20px;
+    }
+
+    .source-notes h4 {
+      margin: 0 0 2px;
+      color: var(--ink);
+      font-size: 15px;
+      line-height: 1.35;
+      letter-spacing: 0;
+    }
+
+    .source-point {
+      display: grid;
+      grid-template-columns: 28px minmax(0, 1fr);
+      gap: 10px;
+      align-items: start;
+      padding: 11px;
+      border-radius: var(--radius-sm);
+      background: var(--surface-card);
+      color: var(--body);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .source-point span {
+      display: grid;
+      place-items: center;
+      width: 24px;
+      height: 24px;
+      border-radius: var(--radius-sm);
+      background: var(--canvas);
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 850;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .source-notes .question-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .source-notes .question-pill {
+      min-height: 46px;
+      padding: 9px 10px;
+      font-size: 12px;
+    }
+
+    .problem-strip,
+    .hypothesis-strip,
+    .confirm-strip {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(190px, 1fr));
+      gap: 1px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--line);
+    }
+
+    .problem-strip {
+      margin-top: 14px;
+    }
+
+    .problem-item,
+    .confirm-item {
+      min-width: 0;
+      min-height: 132px;
+      padding: 18px;
+      background: var(--canvas);
+      transition: background .18s ease, box-shadow .18s ease, transform .18s ease;
+    }
+
+    .problem-item:hover {
+      background: var(--surface);
+      box-shadow: inset 0 0 0 1px rgba(17, 17, 17, .04);
+      transform: translateY(-1px);
+    }
+
+    .problem-item b,
+    .confirm-item b {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--ink);
+      font-size: 15px;
+      line-height: 1.35;
+      letter-spacing: 0;
+      word-break: keep-all;
+    }
+
+    .problem-item p,
+    .confirm-item p {
+      margin: 0;
+      color: var(--body);
+      font-size: 13px;
+      line-height: 1.55;
+      text-wrap: pretty;
+    }
+
+    .hypothesis-strip {
+      grid-template-columns: repeat(4, minmax(205px, 1fr));
+    }
+
+    .hypothesis-item {
+      display: grid;
+      grid-template-rows: auto auto 1fr auto;
+      gap: 12px;
+      min-width: 0;
+      min-height: 306px;
+      padding: 18px;
+      background: var(--canvas);
+    }
+
+    .hypothesis-head {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      gap: 10px;
+      align-items: center;
+    }
+
+    .hypothesis-head span {
+      display: inline-grid;
+      place-items: center;
+      width: 34px;
+      height: 30px;
+      border-radius: var(--radius-sm);
+      background: var(--ink);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 850;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .hypothesis-head b {
+      color: var(--ink);
+      font-size: 15px;
+      line-height: 1.35;
+      letter-spacing: 0;
+      word-break: keep-all;
+    }
+
+    .hypothesis-item p {
+      min-height: 42px;
+      margin: 0;
+      color: var(--body);
+      font-size: 13px;
+      line-height: 1.5;
+      text-wrap: pretty;
+    }
+
+    .ab-compare {
+      display: grid;
+      align-content: start;
+      gap: 8px;
+    }
+
+    .ab-row {
+      display: grid;
+      grid-template-columns: 24px minmax(0, 1fr);
+      gap: 8px;
+      align-items: center;
+      min-height: 40px;
+      padding: 8px;
+      border-radius: var(--radius-sm);
+      background: var(--surface-card);
+      color: var(--body);
+      font-size: 12px;
+      line-height: 1.35;
+      font-weight: 650;
+      word-break: keep-all;
+    }
+
+    .ab-row em {
+      display: grid;
+      place-items: center;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: var(--canvas);
+      color: var(--ink);
+      font-style: normal;
+      font-size: 11px;
+      font-weight: 850;
+    }
+
+    .metric-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      padding-top: 10px;
+      border-top: 1px solid var(--line-soft);
+    }
+
+    .metric-chips span {
+      margin: 0;
+      padding: 5px 8px;
+      border-radius: var(--radius-pill);
+      background: var(--surface-card);
+      color: var(--ink);
+      font-size: 12px;
+      font-weight: 750;
+      white-space: nowrap;
+    }
+
+    .study-visual {
+      display: grid;
+      grid-template-columns: minmax(360px, .72fr) minmax(0, 1.28fr);
+      gap: 1px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--line);
+    }
+
+    .study-side,
+    .study-flow {
+      min-width: 0;
+      background: var(--canvas);
+    }
+
+    .study-side {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 1px;
+      background: var(--line);
+    }
+
+    .study-side div {
+      min-height: 104px;
+      padding: 18px;
+      background: var(--canvas);
+    }
+
+    .study-side span {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .study-side b {
+      display: block;
+      color: var(--ink);
+      font-size: 15px;
+      line-height: 1.45;
+      word-break: keep-all;
+    }
+
+    .study-flow {
+      display: grid;
+      align-content: center;
+      gap: 14px;
+      padding: 22px;
+    }
+
+    .study-note {
+      margin: 0;
+      color: var(--body);
+      font-size: 14px;
+      line-height: 1.55;
+      text-wrap: pretty;
+    }
+
+    .task-flow {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 10px;
+      position: relative;
+      padding: 14px 0 0;
+    }
+
+    .task-flow span {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      align-content: start;
+      gap: 9px;
+      min-width: 0;
+      min-height: 86px;
+      padding: 0 6px;
+      background: transparent;
+      color: var(--body);
+      font-size: 11px;
+      line-height: 1.35;
+      font-weight: 750;
+      word-break: keep-all;
+      overflow-wrap: anywhere;
+      white-space: normal;
+    }
+
+    .task-flow span.keep-line {
+      overflow-wrap: normal;
+      white-space: nowrap;
+    }
+
+    .task-flow span::before {
+      content: attr(data-step);
+      display: grid;
+      place-items: center;
+      width: 30px;
+      height: 30px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-pill);
+      background: var(--canvas);
+      color: var(--ink);
+      font-size: 12px;
+      font-weight: 850;
+      font-variant-numeric: tabular-nums;
+      box-shadow: 0 0 0 6px var(--canvas);
+    }
+
+    .task-flow span::after {
+      content: "";
+      position: absolute;
+      top: 15px;
+      left: 30px;
+      right: -10px;
+      height: 1px;
+      background: var(--line);
+    }
+
+    .task-flow span:last-child::after {
+      display: none;
+    }
+
+    .result-board {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(205px, 1fr));
+      gap: 1px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--line);
+    }
+
+    .result-card {
+      display: grid;
+      grid-template-rows: 34px 52px auto auto;
+      gap: 8px;
+      min-width: 0;
+      min-height: 176px;
+      padding: 16px;
+      align-content: start;
+      background: var(--canvas);
+    }
+
+    .result-card.risk {
+      background: var(--surface);
+    }
+
+    .result-card h3 {
+      margin: 0;
+      color: var(--ink);
+      font-size: 15px;
+      line-height: 1.3;
+      letter-spacing: 0;
+      word-break: keep-all;
+    }
+
+    .result-delta {
+      display: flex;
+      align-items: center;
+      min-height: 52px;
+      color: var(--ink);
+      font-size: clamp(28px, 3.2vw, 40px);
+      line-height: .95;
+      letter-spacing: -.02em;
+      font-weight: 850;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+
+    .result-metric {
+      display: grid;
+      align-content: start;
+      gap: 6px;
+      min-height: 0;
+    }
+
+    .result-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 10px;
+      align-items: baseline;
+      padding-top: 8px;
+      border-top: 1px solid var(--line-soft);
+      color: var(--body);
+      font-size: 12px;
+      line-height: 1.42;
+    }
+
+    .result-row strong {
+      color: var(--ink);
+      font-size: 15px;
+      letter-spacing: 0;
+      white-space: nowrap;
+    }
+
+    .result-conclusion {
+      margin: 0;
+      color: var(--body);
+      font-size: 12px;
+      line-height: 1.48;
+      text-wrap: pretty;
+    }
+
+    .research-summary {
+      display: grid;
+      gap: 18px;
+    }
+
+    .research-summary h3 {
+      max-width: 860px;
+      margin: 0;
+      color: var(--ink);
+      font-size: clamp(23px, 2.4vw, 30px);
+      line-height: 1.22;
+      letter-spacing: 0;
+      word-break: keep-all;
+      text-wrap: balance;
+    }
+    .split {
+      display: grid;
+      grid-template-columns: minmax(300px, .72fr) minmax(0, 1.28fr);
+      gap: 28px;
+      align-items: start;
+    }
+
+    .sticky-note {
+      position: sticky;
+      top: 92px;
+      overflow: hidden;
+      padding: 30px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      background:
+        linear-gradient(180deg, var(--canvas), var(--surface));
+      box-shadow: 0 1px 2px rgba(0,0,0,.04);
+    }
+
+    .sticky-note::after {
+      content: "";
+      display: block;
+      width: 58px;
+      height: 3px;
+      margin-top: 28px;
+      border-radius: var(--radius-pill);
+      background: var(--ink);
+    }
+
+    .sticky-note .kicker {
+      margin-bottom: 18px;
+    }
+
+    .sticky-note h2 {
+      max-width: 520px;
+      font-size: clamp(34px, 4.2vw, 58px);
+      line-height: 1.06;
+      letter-spacing: -.03em;
+    }
+
+    .sticky-note .section-desc {
+      max-width: 560px;
+      margin-top: 26px;
+      font-size: 15px;
+      line-height: 1.8;
+    }
+
+    .timeline {
+      display: grid;
+      gap: 0;
+      position: relative;
+      padding-left: 18px;
+    }
+
+    .timeline::before {
+      content: "";
+      position: absolute;
+      left: 38px;
+      top: 30px;
+      bottom: 30px;
+      width: 1px;
+      background: var(--line);
+    }
+
+    .timeline-item {
+      position: relative;
+      display: grid;
+      grid-template-columns: 54px minmax(0, 1fr);
+      gap: 18px;
+      padding: 0 0 24px;
+      background: transparent;
+    }
+
+    .timeline-item:last-child {
+      padding-bottom: 0;
+    }
+
+    .num {
+      position: relative;
+      z-index: 1;
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--line);
+      background: var(--canvas);
+      color: var(--ink);
+      font-weight: 800;
+      box-shadow: 0 0 0 10px var(--canvas);
+    }
+
+    .timeline-item > div {
+      min-width: 0;
+      padding: 22px 24px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      background: var(--canvas);
+      box-shadow: 0 1px 2px rgba(0,0,0,.035);
+    }
+
+    .timeline-item h3 {
+      margin-bottom: 8px;
+      font-size: 18px;
+      letter-spacing: 0;
+    }
+
+    .timeline-item p {
+      margin: 0;
+      color: var(--body);
+      font-size: 14px;
+      line-height: 1.72;
+    }
+
+    .strategy-tag {
+      display: inline-flex;
+      width: max-content;
+      margin-bottom: 12px;
+      padding: 5px 9px;
+      border-radius: var(--radius-pill);
+      background: var(--surface-card);
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1;
+      font-weight: 800;
+    }
+
+    .image-frame {
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      background: var(--canvas);
+      box-shadow: var(--shadow);
+    }
+
+    .image-frame img {
+      width: 100%;
+      border-radius: var(--radius);
+      border: 1px solid var(--line);
+      background: var(--surface);
+    }
+
+    .caption {
+      margin: 14px 2px 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .solution-stack {
+      display: grid;
+      gap: 88px;
+      padding-bottom: 18vh;
+    }
+
+    .solution-step {
+      position: sticky;
+      top: calc(84px + var(--stack-offset, 0px));
+      z-index: var(--stack-layer);
+      display: grid;
+      grid-template-columns: minmax(0, 1.45fr) minmax(280px, .55fr);
+      gap: 0;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      background: var(--canvas);
+      box-shadow: 0 22px 72px rgba(17, 24, 39, .11);
+      transform-origin: top center;
+      will-change: transform;
+    }
+
+    .solution-step:nth-child(1) { --stack-layer: 1; --stack-offset: 0px; }
+    .solution-step:nth-child(2) { --stack-layer: 2; --stack-offset: 12px; }
+    .solution-step:nth-child(3) { --stack-layer: 3; --stack-offset: 24px; }
+    .solution-step:nth-child(4) { --stack-layer: 4; --stack-offset: 36px; }
+    .solution-step:nth-child(5) { --stack-layer: 5; --stack-offset: 48px; }
+    .solution-step:nth-child(6) { --stack-layer: 6; --stack-offset: 60px; }
+    .solution-step:nth-child(7) { --stack-layer: 7; --stack-offset: 72px; }
+
+    .solution-shot {
+      display: grid;
+      place-items: center;
+      min-width: 0;
+      margin: 0;
+      padding: clamp(16px, 2vw, 28px);
+      border-right: 1px solid var(--line);
+      background:
+        linear-gradient(135deg, rgba(248, 249, 250, .94), rgba(255, 255, 255, .88)),
+        radial-gradient(circle at 18% 12%, color-mix(in srgb, var(--accent, #2563eb) 12%, transparent), transparent 320px);
+    }
+
+    .solution-shot img {
+      width: 100%;
+      height: auto;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fff;
+      box-shadow: 0 12px 36px rgba(17, 24, 39, .08);
+    }
+
+    .solution-copy {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      min-width: 0;
+      padding: clamp(28px, 3vw, 48px);
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.98), rgba(248,249,250,.92));
+    }
+
+    .solution-index {
+      display: inline-flex;
+      align-items: center;
+      width: fit-content;
+      margin-bottom: 20px;
+      padding: 7px 10px;
+      border: 1px solid color-mix(in srgb, var(--accent, #2563eb) 28%, var(--line));
+      border-radius: 999px;
+      color: color-mix(in srgb, var(--accent, #2563eb) 82%, #111);
+      background: color-mix(in srgb, var(--accent, #2563eb) 8%, #fff);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 12px;
+      font-weight: 760;
+      white-space: nowrap;
+    }
+
+    .solution-copy h3 {
+      margin: 0;
+      color: var(--ink);
+      font-size: clamp(24px, 2.6vw, 38px);
+      line-height: 1.12;
+      letter-spacing: 0;
+      text-wrap: balance;
+    }
+
+    .solution-copy p {
+      margin: 18px 0 0;
+      color: var(--body);
+      font-size: 15px;
+      line-height: 1.78;
+      text-wrap: pretty;
+    }
+
+    .solution-points {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 26px;
+    }
+
+    .solution-points span {
+      display: inline-flex;
+      align-items: center;
+      min-height: 30px;
+      padding: 0 10px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--ink);
+      background: var(--canvas);
+      font-size: 12px;
+      font-weight: 650;
+      white-space: nowrap;
+    }
+
+    .decision-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+      isolation: isolate;
+    }
+
+    .decision-grid > .decision {
+      position: relative;
+      display: grid;
+      grid-template-rows: auto 1fr;
+      overflow: visible;
+      padding: 0;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      background: var(--canvas);
+      box-shadow: 0 1px 2px rgba(0,0,0,.035);
+    }
+
+    .decision-grid > .decision:hover,
+    .decision-grid > .decision:focus-within {
+      z-index: 20;
+    }
+
+    .decision-grid > .decision.is-selected {
+      border-color: #c7d2fe;
+      background: #f8fbff;
+    }
+
+    .decision-image {
+      position: relative;
+      padding: 8px;
+      border-bottom: 1px solid var(--line);
+      border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+      background: var(--surface);
+    }
+
+    .decision-image img {
+      display: block;
+      width: 100%;
+      aspect-ratio: 10 / 7;
+      object-fit: contain;
+      object-position: top center;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--canvas);
+    }
+
+    .decision-image .decision-zoom {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      z-index: 12;
+      width: min(640px, calc(100vw - 56px));
+      max-width: none;
+      padding: 10px;
+      border: 1px solid rgba(17, 17, 17, .12);
+      border-radius: 14px;
+      background: rgba(255, 255, 255, .98);
+      box-shadow: 0 24px 70px rgba(17, 24, 39, .18);
+      opacity: 0;
+      pointer-events: none;
+      transform: translate(-50%, -50%) scale(.96);
+      transition: opacity .18s ease .5s, transform .18s ease .5s;
+    }
+
+    .decision-image:hover .decision-zoom,
+    .decision-image:focus-within .decision-zoom {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1);
+    }
+
+    .decision-image:not(:hover):not(:focus-within) .decision-zoom {
+      transition-delay: 0s;
+    }
+
+    .decision-grid > .decision:first-child .decision-zoom {
+      left: 0;
+      transform: translate(0, -50%) scale(.96);
+    }
+
+    .decision-grid > .decision:first-child .decision-image:hover .decision-zoom,
+    .decision-grid > .decision:first-child .decision-image:focus-within .decision-zoom {
+      transform: translate(0, -50%) scale(1);
+    }
+
+    .decision-grid > .decision:last-child .decision-zoom {
+      right: 0;
+      left: auto;
+      transform: translate(0, -50%) scale(.96);
+    }
+
+    .decision-grid > .decision:last-child .decision-image:hover .decision-zoom,
+    .decision-grid > .decision:last-child .decision-image:focus-within .decision-zoom {
+      transform: translate(0, -50%) scale(1);
+    }
+
+    @media (max-width: 980px) {
+      .decision-grid > .decision:nth-child(odd) .decision-zoom {
+        left: 0;
+        transform: translate(0, -50%) scale(.96);
+      }
+
+      .decision-grid > .decision:nth-child(odd) .decision-image:hover .decision-zoom,
+      .decision-grid > .decision:nth-child(odd) .decision-image:focus-within .decision-zoom {
+        transform: translate(0, -50%) scale(1);
+      }
+
+      .decision-grid > .decision:nth-child(even) .decision-zoom {
+        right: 0;
+        left: auto;
+        transform: translate(0, -50%) scale(.96);
+      }
+
+      .decision-grid > .decision:nth-child(even) .decision-image:hover .decision-zoom,
+      .decision-grid > .decision:nth-child(even) .decision-image:focus-within .decision-zoom {
+        transform: translate(0, -50%) scale(1);
+      }
+    }
+
+    .decision-grid > .decision.is-selected .decision-image {
+      background: #f3f7ff;
+    }
+
+    .decision-copy {
+      display: grid;
+      align-content: start;
+      gap: 12px;
+      padding: 22px;
+    }
+
+    .decision-grid > .decision b {
+      display: block;
+      font-size: 17px;
+      line-height: 1.35;
+      letter-spacing: 0;
+    }
+
+    .decision-grid > .decision p {
+      margin: 0;
+      color: var(--body);
+      font-size: 14px;
+      line-height: 1.68;
+    }
+
+    .check-list {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      display: grid;
+      gap: 12px;
+    }
+
+    .check-list li {
+      position: relative;
+      padding-left: 28px;
+    }
+
+    .check-list li::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: .55em;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--blue);
+      box-shadow: inset 0 0 0 4px #dbeafe;
+    }
+
+    .quote-band {
+      padding: 48px;
+      border-radius: var(--radius-lg);
+      background: var(--card);
+    }
+
+    .quote-band p {
+      margin: 0;
+      max-width: 980px;
+      font-size: clamp(24px, 3.8vw, 42px);
+      line-height: 1.22;
+      letter-spacing: -.035em;
+      font-weight: 750;
+    }
+
+    .result-panel {
+      display: grid;
+      grid-template-columns: minmax(260px, .38fr) minmax(0, 1fr);
+      gap: 28px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      background: var(--canvas);
+      padding: 30px;
+      box-shadow: 0 1px 2px rgba(0,0,0,.035);
+    }
+
+    .result-feature {
+      display: grid;
+      align-content: start;
+      gap: 18px;
+      min-height: auto;
+      padding: 24px;
+      border-radius: var(--radius);
+      background: var(--surface);
+    }
+
+    .result-feature span {
+      width: max-content;
+      display: inline-flex;
+      margin-bottom: 18px;
+      padding: 5px 10px;
+      border-radius: var(--radius-pill);
+      background: var(--canvas);
+      color: var(--muted);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 12px;
+      font-weight: 820;
+    }
+
+    .result-feature h3 {
+      max-width: 360px;
+      margin: 0;
+      color: var(--ink);
+      font-size: clamp(24px, 2.4vw, 34px);
+      line-height: 1.16;
+      letter-spacing: 0;
+    }
+
+    .result-feature p {
+      max-width: 480px;
+      margin: 0;
+      color: var(--body);
+      font-size: 14px;
+      line-height: 1.72;
+    }
+
+    .result-proof-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 1px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--line);
+    }
+
+    .result-proof {
+      display: grid;
+      grid-template-columns: 1fr;
+      grid-template-rows: 104px auto;
+      gap: 14px;
+      min-height: 250px;
+      padding: 24px;
+      background: var(--canvas);
+    }
+
+    .result-proof code {
+      display: block;
+      color: var(--blue);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 13px;
+      line-height: 18px;
+      font-weight: 820;
+    }
+
+    .result-proof-head {
+      display: grid;
+      grid-template-rows: 22px 24px 34px;
+      gap: 0;
+      align-content: start;
+    }
+
+    .result-proof h3 {
+      margin: 0;
+      font-size: 21px;
+      line-height: 34px;
+      letter-spacing: 0;
+      white-space: nowrap;
+    }
+
+    .result-proof em {
+      display: block;
+      color: var(--muted);
+      font-style: normal;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 12px;
+      line-height: 20px;
+      font-weight: 760;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .result-proof p {
+      margin: 0;
+      color: var(--body);
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .result-proof strong {
+      color: var(--ink);
+      font-weight: 760;
+    }
+
+    .footer {
+      border-top: 1px solid var(--line-soft);
+      background: var(--surface);
+    }
+
+    .footer-inner {
+      width: min(var(--max), calc(100% - 40px));
+      margin: 0 auto;
+      min-height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .flow-shell {
+      overflow: hidden;
+      border: 1px solid var(--hairline);
+      border-radius: var(--radius-xl);
+      background: var(--canvas);
+      box-shadow: 0 1px 2px rgba(0,0,0,.05), 0 18px 48px rgba(17,17,17,.07);
+    }
+
+    .flow-toolbar {
+      min-height: 76px;
+      padding: 18px 22px;
+      border-bottom: 1px solid var(--hairline);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      background: var(--canvas);
+    }
+
+    .flow-title h2 {
+      margin-bottom: 4px;
+      font-size: 22px;
+      line-height: 1.3;
+      letter-spacing: -.02em;
+    }
+
+    .flow-title p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 8px 12px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .legend span {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 0;
+    }
+
+    .mark {
+      width: 18px;
+      height: 14px;
+      border: 1px solid var(--hairline);
+      background: #fff;
+      display: inline-block;
+    }
+
+    .mark.start {
+      width: 24px;
+      border-radius: var(--radius-pill);
+      background: var(--flow-start);
+    }
+
+    .mark.action {
+      width: 16px;
+      height: 16px;
+      border-radius: var(--radius-pill);
+      background: var(--flow-action);
+      border-color: #bfdbfe;
+    }
+
+    .mark.decision {
+      width: 14px;
+      height: 14px;
+      transform: rotate(45deg);
+      background: var(--flow-decision);
+      border-color: #fde68a;
+    }
+
+    .flow-canvas {
+      overflow: hidden;
+      padding: 18px;
+      background: var(--surface-soft);
+    }
+
+    .flow-svg {
+      width: 100%;
+      height: auto;
+      display: block;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+    }
+
+    .stage-band {
+      fill: #fff;
+      stroke: var(--hairline);
+      stroke-width: 1;
+    }
+
+    .stage-title {
+      fill: var(--flow-text);
+      font-size: 16px;
+      font-weight: 500;
+    }
+
+    .stage-note {
+      fill: var(--flow-sub);
+      font-size: 13px;
+    }
+
+    .node-start,
+    .node-end {
+      fill: var(--flow-start);
+      stroke: var(--hairline);
+      stroke-width: 1.2;
+    }
+
+    .node-action {
+      fill: var(--flow-action);
+      stroke: #bfdbfe;
+      stroke-width: 1.2;
+    }
+
+    .node-page {
+      fill: var(--flow-page);
+      stroke: var(--hairline);
+      stroke-width: 1.2;
+    }
+
+    .node-decision {
+      fill: var(--flow-decision);
+      stroke: #fde68a;
+      stroke-width: 1.2;
+    }
+
+    .node-text {
+      fill: var(--flow-text);
+      font-size: 13px;
+      font-weight: 500;
+      text-anchor: middle;
+      dominant-baseline: central;
+    }
+
+    .line {
+      fill: none;
+      stroke: var(--flow-wire);
+      stroke-width: 1.35;
+      marker-end: url(#arrow);
+    }
+
+    .label {
+      fill: var(--flow-blue);
+      stroke: #fff;
+      stroke-width: 5;
+      paint-order: stroke;
+      font-size: 12px;
+      font-weight: 500;
+      text-anchor: middle;
+      dominant-baseline: central;
+    }
+
+    .label.no { fill: var(--flow-danger); }
+    .label.alt { fill: var(--flow-sub); }
+
+    .notes-grid {
+      display: grid;
+      grid-template-columns: minmax(180px, .72fr) repeat(3, minmax(0, 1fr));
+      gap: 1px;
+      margin-top: 20px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      background: var(--line);
+    }
+
+    .note-card {
+      min-height: 150px;
+      padding: 22px;
+      background: var(--canvas);
+    }
+
+    .note-card.note-intro {
+      display: grid;
+      align-content: space-between;
+      background: var(--surface);
+    }
+
+    .note-card.note-intro span {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 850;
+    }
+
+    .note-card.note-intro b {
+      display: block;
+      max-width: 150px;
+      color: var(--ink);
+      font-size: 22px;
+      line-height: 1.18;
+      letter-spacing: 0;
+    }
+
+    .note-card:not(.note-intro) {
+      display: grid;
+      align-content: start;
+      gap: 14px;
+    }
+
+    .note-card:not(.note-intro)::before {
+      content: "";
+      width: 28px;
+      height: 3px;
+      border-radius: var(--radius-pill);
+      background: var(--ink);
+    }
+
+    .note-card h3 {
+      margin-bottom: 0;
+      font-size: 16px;
+      letter-spacing: 0;
+    }
+
+    .note-card p {
+      margin-bottom: 0;
+      color: var(--body);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    @media (max-width: 980px) {
+      .hero,
+      .split,
+      .story-board,
+      .research-row,
+      .research-insight-grid,
+      .source-evidence,
+      .study-visual {
+        grid-template-columns: 1fr;
+      }
+
+      .hero {
+        min-height: auto;
+        padding-top: 54px;
+      }
+
+      .hero-card {
+        min-height: 500px;
+      }
+
+      .hero-showcase {
+        width: 100%;
+        max-width: 640px;
+        margin: 0 auto;
+      }
+
+      .showcase-panel {
+        grid-template-columns: 130px minmax(0, 1fr);
+      }
+
+      .meta-grid,
+      .metric-grid,
+      .notes-grid,
+      .decision-grid,
+      .problem-strip,
+      .hypothesis-strip,
+      .confirm-strip,
+      .result-board {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .research-row-title {
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .task-flow {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        row-gap: 16px;
+      }
+
+      .task-flow span:nth-child(3)::after,
+      .task-flow span:nth-child(6)::after {
+        display: none;
+      }
+
+      .source-notes .question-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .result-panel {
+        grid-template-columns: 1fr;
+      }
+
+      .result-feature {
+        min-height: auto;
+      }
+
+      .result-proof-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .solution-step {
+        grid-template-columns: 1fr;
+        min-height: auto;
+      }
+
+      .solution-shot {
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+      }
+
+    }
+    @media (max-width: 720px) {
+      .nav-inner {
+        width: min(var(--max), calc(100% - 28px));
+        align-items: flex-start;
+        padding: 12px 0;
+        flex-direction: column;
+      }
+
+      .nav-links {
+        width: 100%;
+        overflow-x: auto;
+        justify-content: flex-start;
+      }
+
+      .nav-action { display: none; }
+      .section,
+      .hero,
+      .footer-inner {
+        width: min(var(--max), calc(100% - 28px));
+      }
+
+      .section { padding: 68px 0; }
+      h1 { font-size: 42px; }
+      .hero-subtitle { font-size: 18px; }
+      .hero-lead { font-size: 16px; }
+      .hero-card {
+        min-height: auto;
+      }
+
+      .hero-showcase {
+        min-height: auto;
+        grid-template-columns: 1fr;
+        grid-template-rows: auto;
+        padding: 14px;
+      }
+
+      .showcase-path {
+        grid-template-columns: 1fr;
+      }
+
+      .showcase-path span {
+        text-align: left;
+      }
+
+      .showcase-workspace,
+      .showcase-summary {
+        grid-column: 1;
+        grid-row: auto;
+      }
+
+      .showcase-panel {
+        grid-template-columns: 1fr;
+      }
+
+      .showcase-node-list {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .showcase-member {
+        grid-template-columns: 1fr;
+        align-items: start;
+      }
+
+      .showcase-toolbar {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .showcase-summary {
+        grid-template-columns: 1fr;
+      }
+      .meta-grid,
+      .metric-grid,
+      .problem-strip,
+      .hypothesis-strip,
+      .confirm-strip,
+      .decision-grid,
+      .study-visual,
+      .study-side,
+      .task-flow,
+      .research-insight-grid,
+      .source-evidence,
+      .question-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .research-row-title,
+      .research-row-body {
+        padding: 22px;
+      }
+
+      .result-board,
+      .result-row {
+        grid-template-columns: 1fr;
+      }
+
+      .result-card {
+        grid-template-rows: auto;
+        min-height: auto;
+      }
+
+      .flow-row {
+        grid-template-columns: 1fr;
+      }
+
+      .story-panel {
+        min-height: 300px;
+        padding: 26px;
+      }
+      .bar-row {
+        grid-template-columns: 58px 1fr 56px;
+      }
+
+      .task-flow {
+        gap: 1px;
+        padding: 0;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        overflow: hidden;
+        background: var(--line);
+      }
+
+      .task-flow span {
+        min-height: 54px;
+        grid-template-columns: 34px minmax(0, 1fr);
+        align-items: center;
+        align-content: center;
+        padding: 10px 12px;
+        background: var(--canvas);
+      }
+
+      .task-flow span::before {
+        box-shadow: none;
+      }
+
+      .task-flow span::after {
+        display: none;
+      }
+
+      .quote-band { padding: 28px; }
+      .result-proof {
+        gap: 14px;
+        min-height: auto;
+        padding: 24px;
+      }
+      .result-proof h3,
+      .result-proof em {
+        white-space: normal;
+      }
+      .footer-inner { flex-direction: column; }
+      .notes-grid {
+        grid-template-columns: 1fr;
+      }
+      .note-card {
+        min-height: auto;
+      }
+      .note-card.note-intro {
+        gap: 12px;
+      }
+      .note-card.note-intro b {
+        max-width: none;
+      }
+
+      .solution-stack {
+        gap: 42px;
+        padding-bottom: 8vh;
+      }
+
+      .solution-step {
+        position: relative;
+        top: auto;
+        border-radius: 18px;
+      }
+
+      .solution-copy {
+        padding: 24px;
+      }
+
+      .solution-copy h3 {
+        font-size: 24px;
+      }
+
+      .solution-index,
+      .solution-points span {
+        white-space: normal;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        scroll-behavior: auto !important;
+        transition-duration: .01ms !important;
+        animation-duration: .01ms !important;
+      }
+    }
+  </style></head>
+<body id="top">
+  <nav class="nav" aria-label="项目页导航">
+    <div class="nav-inner">
+      <a class="brand cursor-target" href="#top" aria-label="返回页面顶部">
+        <img class="brand-logo" src="../assets/logo.svg" alt="" aria-hidden="true">
+        <span>一杯豆奶</span>
+      </a>
+      <div class="nav-links" aria-label="章节">
+        <a class="cursor-target is-active" href="#context" aria-current="">背景</a>
+        <a class="cursor-target" href="#research">研究</a>
+        <a class="cursor-target" href="#strategy">策略</a>
+        <a class="cursor-target" href="#solution">方案</a>
+        <a class="cursor-target" href="#result">结果</a>
+      </div>
+      <a class="nav-action cursor-target" href="../ai-workflow/index.html">Next</a>
+    </div>
+  </nav>
+
+  <main>
+    <header class="hero">
+      <div>
+        <div class="eyebrow">PLM 复杂 B 端系统案例</div>
+        <h1>业务对象工作流</h1>
+        <p class="hero-subtitle">从人工发起到可配置、可追踪的流程体验</p>
+        <p class="hero-lead">本项目围绕数字主线 REACH.PLM 中的业务对象工作流，重构流程发起、签署表选人、自动触发、对象级追踪与历史记录体验，让复杂流程在启动前变得可判断、可配置、可验证。</p>
+        <div class="hero-actions">
+          <a class="btn primary cursor-target" href="#research">阅读设计过程</a>
+          <a class="btn cursor-target" href="#solution">跳转设计方案</a>
+        </div>
+        <div class="meta-grid">
+          <div class="meta-item"><span>项目类型</span><b>企业级 PLM / 工作流</b></div>
+          <div class="meta-item"><span>我的职责</span><b>需求理解、流程梳理、交互设计</b></div>
+          <div class="meta-item"><span>关键对象</span><b>签署表、流程节点、任务历史</b></div>
+          <div class="meta-item"><span>设计目标</span><b>减少返工，提升启动确定感</b></div>
+        </div>
+      </div>
+
+      <aside class="hero-card" aria-label="业务对象工作流设计方案预览">
+        <div class="hero-showcase" aria-label="业务对象工作流封面展示">
+          <div class="showcase-path" aria-label="流程路径概览">
+            <span><i class="ri-file-list-3-line" aria-hidden="true"></i>签署表配置</span>
+            <span><i class="ri-git-branch-line" aria-hidden="true"></i>模板选择</span>
+            <span><i class="ri-team-line" aria-hidden="true"></i>成员配置</span>
+            <span><i class="ri-shield-check-line" aria-hidden="true"></i>启动校验</span>
+            <span><i class="ri-history-line" aria-hidden="true"></i>审批追踪</span>
+          </div>
+
+          <div class="showcase-workspace">
+            <div class="showcase-window-bar">
+              <b>启动工作流 / 选人配置</b>
+            </div>
+            <div class="showcase-panel">
+              <div class="showcase-node-list">
+                <div class="showcase-node active"><b><i class="ri-user-follow-line" aria-hidden="true"></i>提交人确认</b><span>已带出默认成员</span></div>
+                <div class="showcase-node"><b><i class="ri-tools-line" aria-hidden="true"></i>工程审核</b><span>需补充成员</span></div>
+                <div class="showcase-node"><b><i class="ri-checkbox-circle-line" aria-hidden="true"></i>质量审批</b><span>等待确认</span></div>
+                <div class="showcase-node"><b><i class="ri-loop-right-line" aria-hidden="true"></i>归档节点</b><span>自动触发</span></div>
+              </div>
+              <div class="showcase-editor">
+                <div class="showcase-toolbar">
+                  <span class="showcase-select"><i class="ri-file-paper-2-line" aria-hidden="true"></i>开题签审 QR-12</span>
+                </div>
+                <div class="showcase-member-grid">
+                  <div class="showcase-member">
+                    <span class="showcase-badge ready"><i class="ri-check-line" aria-hidden="true"></i>已配置</span>
+                    <div class="showcase-chip-row">
+                      <span class="showcase-chip">张飞 · 个人</span>
+                      <span class="showcase-chip">质量部 · 组织</span>
+                    </div>
+                    <span class="showcase-action" aria-label="确认"><i class="ri-arrow-down-s-line" aria-hidden="true"></i></span>
+                  </div>
+                  <div class="showcase-member">
+                    <span class="showcase-badge check"><i class="ri-eye-line" aria-hidden="true"></i>需确认</span>
+                    <div class="showcase-chip-row">
+                      <span class="showcase-chip">设计评审 · 角色</span>
+                      <span class="showcase-chip">+ 4 人</span>
+                    </div>
+                    <span class="showcase-action" aria-label="展开"><i class="ri-arrow-down-s-line" aria-hidden="true"></i></span>
+                  </div>
+                  <div class="showcase-member compact">
+                    <span class="showcase-badge warn"><i class="ri-error-warning-line" aria-hidden="true"></i>缺少成员</span>
+                    <span class="showcase-action" aria-label="配置"><i class="ri-arrow-down-s-line" aria-hidden="true"></i></span>
+                  </div>
+                </div>
+                <div class="showcase-validation">
+                  <span><i class="ri-information-line" aria-hidden="true"></i>默认库未找到成员时，可切换总体成员库继续搜索。</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="showcase-summary">
+            <span><i class="ri-settings-4-line" aria-hidden="true"></i><b>Before launch</b>签署表先定义规则</span>
+            <span><i class="ri-user-settings-line" aria-hidden="true"></i><b>During launch</b>成员配置当前页完成</span>
+            <span><i class="ri-time-line" aria-hidden="true"></i><b>After launch</b>任务状态可追踪</span>
+          </div>
+        </div>
+      </aside>
+    </header>
+
+    <section class="section" id="context">
+      <div class="section-head">
+        <div class="kicker">01 / Context</div>
+        <h2>业务对象工作流从全部由人工<br>发起，转向阶段触发</h2>
+        <p class="section-desc">数字主线中的流程能力，正在从“用户手动选择并发起”，转向“按业务阶段自动触发、按对象类型差异化配置”。
+在这个变化下，工作流不再只是一个入口问题，而是要同时处理：签署表选择、流程模板绑定、节点成员配置、对象级发起、任务进度查看和历史记录回溯。</p>
+      </div>
+      <div class="story-board">
+        <article class="story-panel">
+          <span class="tag">Core Insight</span>
+          <h3>用户缺少的不是入口，<br>而是启动前的判断依据。</h3>
+          <p>
+本项目围绕签署表、自动触发、对象级发起、进程页签和历史记录进行重构，目标是减少人工判断和重复选人，使流程发起平均时长下降 30%～40%，发起成功率提升至 95% 以上。</p>
+        </article>
+        <div class="story-list">
+          <article class="story-mini cursor-target">
+            <span class="tag">Why</span>
+            <b>从手动选择发起，走向阶段自动触发</b>
+            <p>生命周期状态、流程模板和签署表配置需要建立稳定映射。</p>
+          </article>
+          <article class="story-mini cursor-target">
+            <span class="tag">Where</span>
+            <b>入口深、信息不足、选人效率低</b>
+            <p>用户卡在启动前的确认阶段，不敢直接提交。</p>
+          </article>
+          <article class="story-mini cursor-target">
+            <span class="tag">Opportunity</span>
+            <b>用签署表重构流程发起确定感</b>
+            <p>让流程配置从“人工回看”变成“按状态完成”。</p>
+          </article>
+        </div>
+      </div>
+    </section>
+    <div class="soft-band">
+      <section class="section" id="research">
+        <div class="section-head">
+          <div class="kicker">02 / Research</div>
+          <h2>用户缺少的是“可以安全启动”的判断依据</h2>
+          <p class="section-desc">研究将流程复杂度定义为用户在启动前需要确认和配置的节点负担。通过可用性 A/B 测试，验证节点状态、选人路径、成员完整展示和成员类型标签对启动效率的影响。</p>
+        </div>
+
+        <div class="research-story">
+          <section class="research-row">
+            <div class="research-row-title">
+              <span>01 / Overview</span>
+              <h3>问题总览</h3>
+              <p>用户真正缺少的是提交前的确定感。</p>
+            </div>
+            <div class="research-row-body">
+              <div class="source-evidence" aria-label="原界面问题证据">
+                <div class="source-shot">
+                  <div class="source-shot-title">
+                    <b>原流程启动界面</b>
+                    <span>问题观察入口</span>
+                  </div>
+                  <img src="assets/之前的选人界面.png" alt="原流程启动选人界面">
+                </div>
+                <div class="source-notes">
+                  <h4>启动前疑问</h4>
+                  <div class="question-grid">
+                    <div class="question-pill"><i>01</i>节点是否已经配置完整？</div>
+                    <div class="question-pill"><i>02</i>成员是不是选对了？</div>
+                    <div class="question-pill"><i>03</i>多人名单有没有漏看？</div>
+                    <div class="question-pill"><i>04</i>对象是个人、组织还是角色？</div>
+                    <div class="question-pill"><i>05</i>现在确定会不会发错？</div>
+                    <div class="question-pill"><i>06</i>能否在当前页完成核对？</div>
+                  </div>
+                </div>
+              </div>
+              <div class="problem-strip" aria-label="问题归类">
+                <article class="problem-item cursor-target"><span>01</span><b>认知判断</b><p>节点状态不清，用户难以判断是否满足启动条件。</p></article>
+                <article class="problem-item cursor-target"><span>02</span><b>行为效率</b><p>选人依赖弹窗，连续配置任务被反复拆分。</p></article>
+                <article class="problem-item cursor-target"><span>03</span><b>信息完整性</b><p>成员展示不完整，当前页难以直接核对名单。</p></article>
+                <article class="problem-item cursor-target"><span>04</span><b>决策风险</b><p>成员类型不可见，用户担心选错对象范围。</p></article>
+              </div>
+              <div class="insight-block overview-conclusion">
+                <span>Core finding</span>
+                <h3>用户缺少“配置确定感”，无法判断当前流程是否可以安全启动。</h3>
+                <p>卡点不是单个搜索按钮，而是节点完整性、成员名单、成员类型和提交风险没有在当前层级被直接说明。</p>
+              </div>
+            </div>
+          </section>
+
+          <section class="research-row alt">
+            <div class="research-row-title">
+              <span>02 / Hypothesis</span>
+              <h3>研究假设</h3>
+              <p>每个假设都明确变量和指标。</p>
+            </div>
+            <div class="research-row-body">
+              <div class="hypothesis-strip" aria-label="研究假设变量和指标">
+                <article class="hypothesis-item cursor-target">
+                  <div class="hypothesis-head"><span>H1</span><b>节点配置状态反馈</b></div>
+                  <p>状态不明确，会增加提交前回看和停顿。</p>
+                  <div class="ab-compare"><div class="ab-row"><em>A</em>无明确节点状态反馈</div><div class="ab-row"><em>B</em>显示已配置 / 缺少成员 / 需确认</div></div>
+                  <div class="metric-chips"><span>平均配置时长</span></div>
+                </article>
+                <article class="hypothesis-item cursor-target">
+                  <div class="hypothesis-head"><span>H2</span><b>成员选择路径</b></div>
+                  <p>逐节点弹窗选人，会增加配置时长和重复打开次数。</p>
+                  <div class="ab-compare"><div class="ab-row"><em>A</em>逐节点弹窗选人</div><div class="ab-row"><em>B</em>同页连续 / 批量配置成员</div></div>
+                  <div class="metric-chips"><span>成员弹窗打开次数</span><span>平均配置时长</span></div>
+                </article>
+                <article class="hypothesis-item cursor-target">
+                  <div class="hypothesis-head"><span>H3</span><b>已选成员完整展示</b></div>
+                  <p>成员展示不完整，会增加二次核对行为。</p>
+                  <div class="ab-compare"><div class="ab-row"><em>A</em>成员超出后截断展示</div><div class="ab-row"><em>B</em>展示成员完整名单</div></div>
+                  <div class="metric-chips"><span>成员弹窗二次打开次数</span><span>成员核对时长</span></div>
+                </article>
+                <article class="hypothesis-item cursor-target">
+                  <div class="hypothesis-head"><span>H4</span><b>成员类型标签</b></div>
+                  <p>类型不可见，可能增加误选风险和提交后返工。</p>
+                  <div class="ab-compare"><div class="ab-row"><em>A</em>仅展示成员名称</div><div class="ab-row"><em>B</em>展示成员名称 + 类型标签</div></div>
+                  <div class="metric-chips"><span>成员类型识别准确率</span><span>成员选择错误率</span></div>
+                </article>
+              </div>
+            </div>
+          </section>
+
+          <section class="research-row">
+            <div class="research-row-title">
+              <span>03 / Design</span>
+              <h3>研究设计</h3>
+              <p>同一组任务中，每次只改变一个设计变量。</p>
+            </div>
+            <div class="research-row-body">
+              <div class="study-visual">
+                <div class="study-side">
+                  <div><span>样本量</span><b>n=10<br>每变量 A/B 各 5 人</b></div>
+                  <div><span>用户类型</span><b>业务主管<br>实施 / 运维人员</b></div>
+                  <div><span>任务复杂度</span><b>≥3 节点<br>任一节点 ≥4 成员</b></div>
+                  <div><span>控制条件</span><b>每次只改变<br>一个设计变量</b></div>
+                </div>
+                <div class="study-flow">
+                  <span class="study-note-label">测试任务路径</span>
+                  <p class="study-note">任务覆盖流程模板选择、节点检查、成员配置、成员核对和点击确定启动。</p>
+                  <div class="task-flow" aria-label="测试任务路径">
+                    <span class="keep-line" data-step="01">进入启动弹窗</span><span class="keep-line" data-step="02">选择流程模板</span><span class="keep-line" data-step="03">检查 3 个节点</span><span data-step="04">配置成员</span><span data-step="05">确认成员</span><span class="keep-line" data-step="06">点击确定启动</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="research-row alt">
+            <div class="research-row-title">
+              <span>04 / Evidence</span>
+              <h3>研究结果</h3>
+              <p>这里采用方向性表述，不做强因果判断。</p>
+            </div>
+            <div class="research-row-body">
+              <div class="result-board" aria-label="研究结果">
+                <article class="result-card cursor-target"><h3>H1 状态反馈明确性</h3><div class="result-delta">-6s</div><div class="result-metric"><div class="result-row"><span>平均配置时长</span><strong>21.4s → 15.4s</strong></div></div><p class="result-conclusion">方向性支持：状态反馈可能降低节点配置判断成本。</p></article>
+                <article class="result-card cursor-target"><h3>H2 逐节点弹窗路径</h3><div class="result-delta">-2:27</div><div class="result-metric"><div class="result-row"><span>弹窗平均打开次数</span><strong>7.3 → 2.8</strong></div><div class="result-row"><span>平均配置时长</span><strong>6:21 → 3:54</strong></div></div><p class="result-conclusion">方向性支持：同页连续配置可能减少重复弹窗和操作耗时。</p></article>
+                <article class="result-card cursor-target"><h3>H3 成员完整展示</h3><div class="result-delta">-5次</div><div class="result-metric"><div class="result-row"><span>二次弹窗打开次数</span><strong>5.6 → 0.6</strong></div><div class="result-row"><span>成员核对时长</span><strong>2:18 → 1:04</strong></div></div><p class="result-conclusion">方向性支持：完整名单展示可能降低二次核对成本。</p></article>
+                <article class="result-card risk cursor-target"><h3>H4 成员类型标签</h3><div class="result-delta">+1.9pp</div><div class="result-metric"><div class="result-row"><span>类型识别准确率</span><strong>98.1% → 100%</strong></div></div><p class="result-conclusion">证据不足：当前样本未观察到明显识别改善。</p></article>
+              </div>
+            </div>
+          </section>
+
+          <section class="research-row">
+            <div class="research-row-title">
+              <span>05 / Definition</span>
+              <h3>问题回挂</h3>
+              <p>把研究证据回接到后续设计策略。</p>
+            </div>
+            <div class="research-row-body">
+              <div class="research-summary">
+                <h3>主要阻塞不是“不会选”，而是“无法确认能不能安全启动”。</h3>
+                <div class="confirm-strip" aria-label="问题回挂">
+                  <article class="confirm-item cursor-target"><span>01</span><b>节点配置状态不清晰</b><p>提示节点状态反馈可能降低启动前判断成本。</p></article>
+                  <article class="confirm-item cursor-target"><span>02</span><b>成员选择路径重复</b><p>初步支持将连续任务从多次弹窗中释放出来。</p></article>
+                  <article class="confirm-item cursor-target"><span>03</span><b>已选成员展示不完整</b><p>说明当前页完整展示可能降低成员核对成本。</p></article>
+                  <article class="confirm-item cursor-target"><span>04</span><b>成员身份类型不可见</b><p>本轮证据不足，暂保留为复杂成员场景下的风险项。</p></article>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </section>
+    </div>
+
+    <section class="section" id="strategy">
+      <div class="split">
+        <aside class="sticky-note">
+          <div class="kicker">03 / Strategy</div>
+          <h2>把确认感前置，而不是把用户推回弹窗</h2>
+          <p class="section-desc">原流程把节点完整性判断、身份识别、完整名单核对和必填校验放在弹窗或提交之后，导致用户反复回看。新策略是把这些判断放在启动前的主页面中，让用户按状态完成，而不是靠记忆和猜测完成。</p>
+        </aside>
+        <div class="timeline">
+          <article class="timeline-item">
+            <span class="num">1</span>
+            <div class="cursor-target">
+              <span class="strategy-tag">Status</span>
+              <h3>节点状态前置</h3>
+              <p>流程模板加载后立即显示“已配置 / 需确认 / 缺少成员”，让用户知道当前节点是否可启动。</p>
+            </div>
+          </article>
+          <article class="timeline-item">
+            <span class="num">2</span>
+            <div class="cursor-target">
+              <span class="strategy-tag">Path</span>
+              <h3>选人操作连续化</h3>
+              <p>将逐节点弹窗往返改为左侧节点列表 + 右侧当前节点配置，减少重复搜索、选择和确认。</p>
+            </div>
+          </article>
+          <article class="timeline-item">
+            <span class="num">3</span>
+            <div class="cursor-target">
+              <span class="strategy-tag">Review</span>
+              <h3>成员名单可核对</h3>
+              <p>成员较多时展示数量摘要，并支持展开完整名单，让用户在当前页完成提交前确认。</p>
+            </div>
+          </article>
+          <article class="timeline-item">
+            <span class="num">4</span>
+            <div class="cursor-target">
+              <span class="strategy-tag">Type</span>
+              <h3>身份类型显性化</h3>
+              <p>用个人、组织、角色标签区分成员对象范围，降低误选和后续流程返工风险。</p>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+    <div class="soft-band">
+      <section class="section">
+        <div class="section-head">
+          <div class="kicker">04 / Flow</div>
+          <h2>流程重构：从发起入口到<br>任务历史的统一路径</h2>
+          <p class="section-desc">梳理关键路径和主要分支，发现问题不在单个页面，而在用户选择流程模板后无法判断节点配置是否满足启动条件。因此新流程把状态反馈、成员核对、类型识别和必填校验都前置到启动前。</p>
+        </div>
+
+        <section class="flow-shell" aria-label="业务对象工作流完整流程图">
+          <div class="flow-toolbar">
+            <div class="flow-title">
+              <h2>业务对象工作流用户流程图</h2>
+              <p>配置签署表、新增对象并启动工作流、流程任务节点处理，以及所有判断、回流和异常提示节点。</p>
+            </div>
+            <div class="legend" aria-label="节点图例">
+              <span><i class="mark start"></i>开始 / 结束</span>
+              <span><i class="mark action"></i>动作</span>
+              <span><i class="mark"></i>页面</span>
+              <span><i class="mark decision"></i>判断</span>
+            </div>
+          </div>
+          <div class="flow-canvas">
+            <svg class="flow-svg" viewBox="0 0 1280 1944" role="img" aria-label="业务对象工作流流程图">
+                    <defs>
+                      <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+                        <path d="M 0 0 L 10 5 L 0 10 z" fill="#d1d5db"></path>
+                      </marker>
+                    </defs>
+          
+                    <rect class="stage-band" x="24" y="24" width="1232" height="620"></rect>
+                    <text class="stage-title" x="48" y="58">1. 配置签署表</text>
+                    <text class="stage-note" x="48" y="82">管理员定义流程模板、节点参与人、必选规则与选人权限。</text>
+          
+                    <rect class="node-start" x="54" y="138" width="72" height="34" rx="17"></rect>
+                    <text class="node-text" x="90" y="155">Start</text>
+                    <circle class="node-action" cx="190" cy="155" r="46"></circle>
+                    <text class="node-text" x="190" y="146"><tspan x="190" dy="0">进入签署表</tspan><tspan x="190" dy="17">管理</tspan></text>
+                    <rect class="node-page" x="282" y="129" width="118" height="52"></rect>
+                    <text class="node-text" x="341" y="155"><tspan x="341" dy="-8">签署表</tspan><tspan x="341" dy="17">列表页</tspan></text>
+                    <circle class="node-action" cx="470" cy="155" r="46"></circle>
+                    <text class="node-text" x="470" y="146"><tspan x="470" dy="0">点击新增</tspan><tspan x="470" dy="17">按钮</tspan></text>
+                    <rect class="node-page" x="568" y="129" width="118" height="52"></rect>
+                    <text class="node-text" x="627" y="155"><tspan x="627" dy="-8">新增签署表</tspan><tspan x="627" dy="17">弹窗</tspan></text>
+                    <circle class="node-action" cx="760" cy="155" r="46"></circle>
+                    <text class="node-text" x="760" y="146"><tspan x="760" dy="0">填写基础</tspan><tspan x="760" dy="17">属性</tspan></text>
+                    <polygon class="node-decision" points="920,99 976,155 920,211 864,155"></polygon>
+                    <text class="node-text" x="920" y="155"><tspan x="920" dy="-8">必填信息</tspan><tspan x="920" dy="17">完整？</tspan></text>
+                    <circle class="node-action" cx="1060" cy="155" r="46"></circle>
+                    <text class="node-text" x="1060" y="146"><tspan x="1060" dy="0">选择流程</tspan><tspan x="1060" dy="17">模板</tspan></text>
+                    <rect class="node-page" x="1140" y="129" width="92" height="52"></rect>
+                    <text class="node-text" x="1186" y="155"><tspan x="1186" dy="-8">流程步骤</tspan><tspan x="1186" dy="17">表格</tspan></text>
+          
+                    <path class="line" d="M126 155 H144"></path>
+                    <path class="line" d="M236 155 H282"></path>
+                    <path class="line" d="M400 155 H424"></path>
+                    <path class="line" d="M516 155 H568"></path>
+                    <path class="line" d="M686 155 H714"></path>
+                    <path class="line" d="M806 155 H864"></path>
+                    <path class="line" d="M976 155 H1014"></path>
+                    <text class="label" x="996" y="141">是</text>
+                    <path class="line" d="M1106 155 H1140"></path>
+          
+                    <rect class="node-page" x="864" y="248" width="112" height="46"></rect>
+                    <text class="node-text" x="920" y="271">必填项提示</text>
+                    <circle class="node-action" cx="760" cy="271" r="40"></circle>
+                    <text class="node-text" x="760" y="262"><tspan x="760" dy="0">补充名称</tspan><tspan x="760" dy="17">编码</tspan></text>
+                    <path class="line" d="M920 211 V248"></path>
+                    <text class="label no" x="940" y="228">否</text>
+                    <path class="line" d="M864 271 H800"></path>
+                    <path class="line" d="M760 231 V201"></path>
+          
+                    <circle class="node-action" cx="190" cy="440" r="46"></circle>
+                    <text class="node-text" x="190" y="431"><tspan x="190" dy="0">配置节点</tspan><tspan x="190" dy="17">参与人</tspan></text>
+                    <circle class="node-action" cx="350" cy="440" r="46"></circle>
+                    <text class="node-text" x="350" y="423"><tspan x="350" dy="0">设置必选</tspan><tspan x="350" dy="17">单选多选</tspan><tspan x="350" dy="17">选人权限</tspan></text>
+                    <polygon class="node-decision" points="520,384 576,440 520,496 464,440"></polygon>
+                    <text class="node-text" x="520" y="440"><tspan x="520" dy="-8">节点配置</tspan><tspan x="520" dy="17">有效？</tspan></text>
+                    <circle class="node-action" cx="680" cy="440" r="46"></circle>
+                    <text class="node-text" x="680" y="431"><tspan x="680" dy="0">点击</tspan><tspan x="680" dy="17">确定</tspan></text>
+                    <polygon class="node-decision" points="840,384 896,440 840,496 784,440"></polygon>
+                    <text class="node-text" x="840" y="440"><tspan x="840" dy="-8">编码</tspan><tspan x="840" dy="17">重复？</tspan></text>
+                    <rect class="node-page" x="980" y="414" width="118" height="52"></rect>
+                    <text class="node-text" x="1039" y="440"><tspan x="1039" dy="-8">签署表</tspan><tspan x="1039" dy="17">已保存</tspan></text>
+                    <rect class="node-end" x="1150" y="423" width="72" height="34" rx="17"></rect>
+                    <text class="node-text" x="1186" y="440">End</text>
+          
+                    <path class="line" d="M1186 181 V348 H190 V394"></path>
+                    <path class="line" d="M236 440 H304"></path>
+                    <path class="line" d="M396 440 H464"></path>
+                    <path class="line" d="M576 440 H634"></path>
+                    <text class="label" x="606" y="426">是</text>
+                    <path class="line" d="M726 440 H784"></path>
+                    <path class="line" d="M896 440 H980"></path>
+                    <text class="label no" x="936" y="426">否</text>
+                    <path class="line" d="M1098 440 H1150"></path>
+          
+                    <rect class="node-page" x="464" y="522" width="112" height="40"></rect>
+                    <text class="node-text" x="520" y="542">配置错误提示</text>
+                    <path class="line" d="M520 496 V522"></path>
+                    <text class="label no" x="540" y="510">否</text>
+                    <path class="line" d="M464 542 H350 V486"></path>
+                    <rect class="node-page" x="784" y="522" width="112" height="40"></rect>
+                    <text class="node-text" x="840" y="542">编码重复提示</text>
+                    <path class="line" d="M840 496 V522"></path>
+                    <text class="label no" x="860" y="510">是</text>
+                    <path class="line" d="M784 542 H680 V486"></path>
+          
+                    <rect class="stage-band" x="24" y="680" width="1232" height="820"></rect>
+                    <text class="stage-title" x="48" y="714">2. 新增对象并启动工作流</text>
+                    <text class="stage-note" x="48" y="738">完整保留新增对象、生命周期判断、自动流程、流程模板选择、签署表选人与启动校验。</text>
+          
+                    <rect class="node-start" x="54" y="800" width="72" height="34" rx="17"></rect>
+                    <text class="node-text" x="90" y="817">Start</text>
+                    <circle class="node-action" cx="186" cy="817" r="40"></circle>
+                    <text class="node-text" x="186" y="808"><tspan x="186" dy="0">新增业务</tspan><tspan x="186" dy="17">对象</tspan></text>
+                    <rect class="node-page" x="262" y="794" width="104" height="46"></rect>
+                    <text class="node-text" x="314" y="817">对象新增页</text>
+                    <circle class="node-action" cx="450" cy="817" r="40"></circle>
+                    <text class="node-text" x="450" y="808"><tspan x="450" dy="0">填写对象</tspan><tspan x="450" dy="17">信息</tspan></text>
+                    <polygon class="node-decision" points="596,764 649,817 596,870 543,817"></polygon>
+                    <text class="node-text" x="596" y="817"><tspan x="596" dy="-8">是否绑定</tspan><tspan x="596" dy="17">高级生命周期</tspan></text>
+                    <circle class="node-action" cx="752" cy="817" r="40"></circle>
+                    <text class="node-text" x="752" y="808"><tspan x="752" dy="0">点击</tspan><tspan x="752" dy="17">保存</tspan></text>
+                    <rect class="node-page" x="850" y="794" width="104" height="46"></rect>
+                    <text class="node-text" x="902" y="817">对象详情页</text>
+                    <rect class="node-end" x="1010" y="800" width="72" height="34" rx="17"></rect>
+                    <text class="node-text" x="1046" y="817">End</text>
+          
+                    <path class="line" d="M 126 817 H 146"></path>
+                    <path class="line" d="M 226 817 H 262"></path>
+                    <path class="line" d="M 366 817 H 410"></path>
+                    <path class="line" d="M 490 817 H 543"></path>
+                    <path class="line" d="M 649 817 H 712"></path>
+                    <text class="label no" x="680" y="803">否</text>
+                    <path class="line" d="M 792 817 H 850"></path>
+                    <path class="line" d="M 954 817 H 1010"></path>
+          
+                    <polygon class="node-decision" points="596,920 649,973 596,1026 543,973"></polygon>
+                    <text class="node-text" x="596" y="973">自动流程</text>
+                    <path class="line" d="M 596 870 V 920"></path>
+                    <text class="label" x="616" y="896">是</text>
+                    <rect class="node-page" x="536" y="1078" width="120" height="42"></rect>
+                    <text class="node-text" x="596" y="1099">工作流已启动</text>
+                    <rect class="node-end" x="702" y="1082" width="72" height="34" rx="17"></rect>
+                    <text class="node-text" x="738" y="1099">End</text>
+                    <path class="line" d="M 596 1026 V 1078"></path>
+                    <text class="label" x="616" y="1052">是</text>
+                    <path class="line" d="M 656 1099 H 702"></path>
+          
+                    <circle class="node-action" cx="752" cy="973" r="40"></circle>
+                    <text class="node-text" x="752" y="964"><tspan x="752" dy="0">点击启动</tspan><tspan x="752" dy="17">工作流</tspan></text>
+                    <rect class="node-page" x="850" y="950" width="104" height="46"></rect>
+                    <text class="node-text" x="902" y="973">启动工作流页</text>
+                    <polygon class="node-decision" points="1060,920 1113,973 1060,1026 1007,973"></polygon>
+                    <text class="node-text" x="1060" y="973"><tspan x="1060" dy="-8">流程模板</tspan><tspan x="1060" dy="17">数量</tspan></text>
+                    <path class="line" d="M 649 973 H 712"></path>
+                    <text class="label no" x="680" y="959">否</text>
+                    <path class="line" d="M 792 973 H 850"></path>
+                    <path class="line" d="M 954 973 H 1007"></path>
+          
+                    <circle class="node-action" cx="1180" cy="890" r="36"></circle>
+                    <text class="node-text" x="1180" y="881"><tspan x="1180" dy="0">选择流程</tspan><tspan x="1180" dy="17">模板</tspan></text>
+                    <rect class="node-page" x="1132" y="1070" width="96" height="40"></rect>
+                    <text class="node-text" x="1180" y="1090">默认流程模板</text>
+                    <path class="line" d="M 1060 920 V 890 H 1144"></path>
+                    <text class="label alt" x="1108" y="876">多个流程</text>
+                    <path class="line" d="M 1228 890 H 1240 V 1132 H 138 V 1144"></path>
+                    <path class="line" d="M 1060 1026 V 1090 H 1132"></path>
+                    <text class="label alt" x="1096" y="1068">单个流程</text>
+                    <path class="line" d="M 1228 1090 H 1240"></path>
+          
+                    <polygon class="node-decision" points="138,1144 191,1197 138,1250 85,1197"></polygon>
+                    <text class="node-text" x="138" y="1197">绑定签署表</text>
+                    <circle class="node-action" cx="292" cy="1197" r="40"></circle>
+                    <text class="node-text" x="292" y="1188"><tspan x="292" dy="0">选择签署</tspan><tspan x="292" dy="17">表</tspan></text>
+                    <rect class="node-page" x="392" y="1174" width="104" height="46"></rect>
+                    <text class="node-text" x="444" y="1197">默认带入人员</text>
+                    <circle class="node-action" cx="608" cy="1197" r="40"></circle>
+                    <text class="node-text" x="608" y="1188"><tspan x="608" dy="0">调整节点</tspan><tspan x="608" dy="17">人员</tspan></text>
+                    <polygon class="node-decision" points="780,1144 833,1197 780,1250 727,1197"></polygon>
+                    <text class="node-text" x="780" y="1197"><tspan x="780" dy="-8">必填节点</tspan><tspan x="780" dy="17">完整？</tspan></text>
+                    <rect class="node-page" x="900" y="1174" width="112" height="46"></rect>
+                    <text class="node-text" x="956" y="1197">节点红框提示</text>
+                    <circle class="node-action" cx="1128" cy="1197" r="40"></circle>
+                    <text class="node-text" x="1128" y="1188"><tspan x="1128" dy="0">补充处理</tspan><tspan x="1128" dy="17">人员</tspan></text>
+          
+                    <path class="line" d="M 191 1197 H 252"></path>
+                    <text class="label" x="220" y="1183">是</text>
+                    <path class="line" d="M 332 1197 H 392"></path>
+                    <path class="line" d="M 496 1197 H 568"></path>
+                    <path class="line" d="M 648 1197 H 727"></path>
+                    <path class="line" d="M 833 1197 H 900"></path>
+                    <text class="label no" x="866" y="1183">否</text>
+                    <path class="line" d="M 1012 1197 H 1088"></path>
+                    <path class="line" d="M 1128 1237 V 1282 H 780 V 1250"></path>
+          
+                    <circle class="node-action" cx="250" cy="1380" r="40"></circle>
+                    <text class="node-text" x="250" y="1371"><tspan x="250" dy="0">完成选人</tspan><tspan x="250" dy="17">与确认</tspan></text>
+                    <circle class="node-action" cx="420" cy="1380" r="40"></circle>
+                    <text class="node-text" x="420" y="1371"><tspan x="420" dy="0">确认</tspan><tspan x="420" dy="17">启动</tspan></text>
+                    <rect class="node-page" x="560" y="1357" width="120" height="46"></rect>
+                    <text class="node-text" x="620" y="1380">工作流已启动</text>
+                    <rect class="node-page" x="760" y="1357" width="104" height="46"></rect>
+                    <text class="node-text" x="812" y="1380">待办生成</text>
+                    <rect class="node-end" x="1010" y="1363" width="72" height="34" rx="17"></rect>
+                    <text class="node-text" x="1046" y="1380">End</text>
+          
+                    <path class="line" d="M 85 1197 H 58 V 1380 H 210"></path>
+                    <text class="label no" x="70" y="1183">否</text>
+                    <path class="line" d="M 780 1250 V 1326 H 250 V 1340"></path>
+                    <text class="label" x="800" y="1288">是</text>
+                    <path class="line" d="M 290 1380 H 380"></path>
+                    <path class="line" d="M 460 1380 H 560"></path>
+                    <path class="line" d="M 680 1380 H 760"></path>
+                    <path class="line" d="M 864 1380 H 1010"></path>
+          
+                    <rect class="stage-band" x="24" y="1540" width="1232" height="380"></rect>
+                    <text class="stage-title" x="48" y="1574">3. 流程任务节点处理</text>
+                    <text class="stage-note" x="48" y="1598">处理人从待办进入审批页面，按操作类型完成处理或转办委派。</text>
+          
+                    <rect class="node-start" x="54" y="1687" width="72" height="34" rx="17"></rect>
+                    <text class="node-text" x="90" y="1704">Start</text>
+                    <circle class="node-action" cx="190" cy="1704" r="46"></circle>
+                    <text class="node-text" x="190" y="1695"><tspan x="190" dy="0">打开待办</tspan><tspan x="190" dy="17">任务</tspan></text>
+                    <rect class="node-page" x="282" y="1678" width="118" height="52"></rect>
+                    <text class="node-text" x="341" y="1704"><tspan x="341" dy="-8">任务审批</tspan><tspan x="341" dy="17">页面</tspan></text>
+                    <circle class="node-action" cx="470" cy="1704" r="46"></circle>
+                    <text class="node-text" x="470" y="1695"><tspan x="470" dy="0">选择任务</tspan><tspan x="470" dy="17">操作</tspan></text>
+                    <polygon class="node-decision" points="640,1648 696,1704 640,1760 584,1704"></polygon>
+                    <text class="node-text" x="640" y="1704"><tspan x="640" dy="-8">操作</tspan><tspan x="640" dy="17">类型？</tspan></text>
+                    <circle class="node-action" cx="820" cy="1659" r="46"></circle>
+                    <text class="node-text" x="820" y="1650"><tspan x="820" dy="0">完成任务</tspan><tspan x="820" dy="17">处理</tspan></text>
+                    <rect class="node-page" x="972" y="1633" width="118" height="52"></rect>
+                    <text class="node-text" x="1031" y="1659"><tspan x="1031" dy="-8">任务状态</tspan><tspan x="1031" dy="17">更新</tspan></text>
+                    <rect class="node-end" x="1160" y="1642" width="72" height="34" rx="17"></rect>
+                    <text class="node-text" x="1196" y="1659">End</text>
+          
+                    <path class="line" d="M 126 1704 H 144"></path>
+                    <path class="line" d="M 236 1704 H 282"></path>
+                    <path class="line" d="M 400 1704 H 424"></path>
+                    <path class="line" d="M 516 1704 H 584"></path>
+                    <path class="line" d="M 696 1704 H 734 V 1659 H 774"></path>
+                    <text class="label alt" x="744" y="1671">同意、驳回</text>
+                    <path class="line" d="M 866 1659 H 972"></path>
+                    <path class="line" d="M 1090 1659 H 1160"></path>
+          
+                    <circle class="node-action" cx="820" cy="1801" r="46"></circle>
+                    <text class="node-text" x="820" y="1784"><tspan x="820" dy="0">选择新</tspan><tspan x="820" dy="17">负责人</tspan></text>
+                    <circle class="node-action" cx="980" cy="1801" r="46"></circle>
+                    <text class="node-text" x="980" y="1784"><tspan x="980" dy="0">填写转办</tspan><tspan x="980" dy="17">原因</tspan></text>
+                    <rect class="node-page" x="1092" y="1775" width="118" height="52"></rect>
+                    <text class="node-text" x="1151" y="1801"><tspan x="1151" dy="-8">任务转给</tspan><tspan x="1151" dy="17">他人</tspan></text>
+                    <path class="line" d="M 696 1704 H 734 V 1801 H 774"></path>
+                    <text class="label alt" x="748" y="1763">转办、委派</text>
+                    <path class="line" d="M 866 1801 H 934"></path>
+                    <path class="line" d="M 1026 1801 H 1092"></path>
+                    <path class="line" d="M 1210 1801 H 1238 V 1659 H 1232"></path>
+                </svg>
+          </div>
+        </section>
+
+        <div class="notes-grid" aria-label="流程闭环说明">
+          <article class="note-card note-intro">
+            <span>Flow Closure</span>
+            <b>流程闭环结构</b>
+          </article>
+          <article class="note-card cursor-target">
+            <h3>配置规则先行</h3>
+            <p>签署表配置阶段定义流程模板、节点参与人、必选规则和选人权限，为后续启动流程提供默认规则。</p>
+          </article>
+          <article class="note-card cursor-target">
+            <h3>启动路径保留分支</h3>
+            <p>对象新增后根据生命周期、自动流程、流程模板数量和签署表绑定情况进入不同判断路径。</p>
+          </article>
+          <article class="note-card cursor-target">
+            <h3>任务处理闭环</h3>
+            <p>流程启动后进入待办处理，支持同意、驳回、转办、委派等任务操作，并更新任务状态。</p>
+          </article>
+        </div>
+      </section>
+    </div>
+
+    <section class="section">
+      <div class="section-head">
+        <div class="kicker">05 / Wireframe Decision</div>
+        <h2>对比三种信息组织方式</h2>
+        <p class="section-desc">这个阶段的核心不是把控件摆好看，而是判断“看流程”和“做选择”应该如何连续发生。</p>
+      </div>
+      <div class="decision-grid">
+        <article class="decision cursor-target">
+          <figure class="decision-image">
+            <img src="assets/信息组织方式1.png" alt="方案 A 横向流程导航式信息组织草图">
+            <img class="decision-zoom" src="assets/信息组织方式1.png" alt="" aria-hidden="true">
+          </figure>
+          <div class="decision-copy">
+            <span class="tag">方案 A</span>
+            <b>横向流程导航式</b>
+            <p>流程节点占据过多横向空间，当前节点、候选人库和已选结果之间的关系不够聚焦，节点过多时也不利于展示。</p>
+          </div>
+        </article>
+        <article class="decision is-selected cursor-target">
+          <figure class="decision-image">
+            <img src="assets/信息组织方式2.png" alt="最终采用 左流程右操作的主从结构草图">
+            <img class="decision-zoom" src="assets/信息组织方式2.png" alt="" aria-hidden="true">
+          </figure>
+          <div class="decision-copy">
+            <span class="tag">最终采用</span>
+            <b>左流程右操作的主从结构</b>
+            <p>全局配置固定在顶部，左侧集中展示流程节点，右侧完成当前节点选人。用户可以先判断全局条件，再连续处理节点。</p>
+          </div>
+        </article>
+        <article class="decision cursor-target">
+          <figure class="decision-image">
+            <img src="assets/信息组织方式3.png" alt="方案 C 配置与流程混合排列草图">
+            <img class="decision-zoom" src="assets/信息组织方式3.png" alt="" aria-hidden="true">
+          </figure>
+          <div class="decision-copy">
+            <span class="tag">方案 C</span>
+            <b>配置与流程混合排列</b>
+            <p>配置和流程放在同一纵向序列中，容易让用户误以为配置也是流程节点，导致全局条件和节点任务层级混淆。</p>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="section" id="solution">
+      <div class="section-head">
+        <div class="kicker">06 / Final UI</div>
+        <h2>最终方案：让用户在启动前完成判断、配置和核对</h2>
+        <p class="section-desc">最终方案按真实流程展开：先完成启动前的签署表配置，再进入启动弹窗中的模板选择、成员库切换、异常提示和必填校验，最后落到审批任务处理。</p>
+      </div>
+      <div class="solution-stack" aria-label="最终方案滚动堆栈">
+        <article class="solution-step cursor-target" style="--accent: #2563eb; transform: translate3d(0px, 0px, 0px) scale(1); z-index: 1;">
+          <figure class="solution-shot">
+            <img src="assets/签署表1.png" alt="签署表配置界面第一步">
+          </figure>
+          <div class="solution-copy">
+            <span class="solution-index">01 / Before launch</span>
+            <h3>签署表配置先定义流程规则</h3>
+            <p>在启动流程之前，先通过签署表维护流程模板、节点参与人和基础规则。这样用户进入发起流程时，不需要从空白状态重新理解每个节点该由谁处理。</p>
+            <div class="solution-points"><span>流程模板</span><span>节点参与人</span><span>默认规则</span></div>
+          </div>
+        </article>
+
+        <article class="solution-step cursor-target" style="--accent: #0f766e; transform: translate3d(0px, 0px, 0px) scale(1); z-index: 2;">
+          <figure class="solution-shot">
+            <img src="assets/签署表2.png" alt="签署表配置界面第二步">
+          </figure>
+          <div class="solution-copy">
+            <span class="solution-index">02 / Rule library</span>
+            <h3>把成员范围和节点配置前置</h3>
+            <p>继续补充签署表中的节点成员和选人范围，把启动时最容易反复确认的信息提前沉淀为配置库。后续发起流程时，系统可以直接带出默认成员。</p>
+            <div class="solution-points"><span>成员范围</span><span>节点配置</span><span>配置复用</span></div>
+          </div>
+        </article>
+
+        <article class="solution-step cursor-target" style="--accent: #7c3aed; transform: translate3d(0px, 0px, 0px) scale(1); z-index: 3;">
+          <figure class="solution-shot">
+            <img src="assets/1、对于有多个签审表的，默认选择第一项 ，切换模板或签署表，则出现提示@2x.png" alt="多个签审表默认选择第一项并在切换时提示">
+          </figure>
+          <div class="solution-copy">
+            <span class="solution-index">03 / Template switch</span>
+            <h3>多签审表默认选择，并提示切换影响</h3>
+            <p>当对象存在多个签审表时，系统默认选择第一项，降低用户进入页面后的第一步判断成本。用户切换模板或签署表时给出提示，避免误以为原成员配置仍然有效。</p>
+            <div class="solution-points"><span>默认选择</span><span>切换提示</span><span>减少误操作</span></div>
+          </div>
+        </article>
+
+        <article class="solution-step cursor-target" style="--accent: #d97706; transform: translate3d(0px, 0px, 0px) scale(1); z-index: 4;">
+          <figure class="solution-shot">
+            <img src="assets/2、选择签署表后，默认填充流程节点人物，右上角可切换签署表默认库与总体成员库，并给出相应提示@2x.png" alt="选择签署表后默认填充节点成员并支持成员库切换">
+          </figure>
+          <div class="solution-copy">
+            <span class="solution-index">04 / Member source</span>
+            <h3>默认填充成员，同时明确当前成员库</h3>
+            <p>选择签署表后，流程节点自动填充默认成员。右上角提供签署表默认库与总体成员库的切换，并用提示说明当前搜索范围，让用户知道自己正在从哪里找人。</p>
+            <div class="solution-points"><span>自动填充</span><span>成员库切换</span><span>搜索范围</span></div>
+          </div>
+        </article>
+
+        <article class="solution-step cursor-target" style="--accent: #0284c7; transform: translate3d(0px, 0px, 0px) scale(1); z-index: 5;">
+          <figure class="solution-shot">
+            <img src="assets/3、当在默认库中未搜到相关成员时，提示可切换成员库搜索@2x.png" alt="默认库未搜到成员时提示切换成员库搜索">
+          </figure>
+          <div class="solution-copy">
+            <span class="solution-index">05 / Empty search</span>
+            <h3>搜索无结果时给出下一步路径</h3>
+            <p>当默认库中没有搜到相关成员，页面不只展示空结果，而是提示用户可以切换到总体成员库继续搜索。这个反馈把异常状态转化为明确的下一步动作。</p>
+            <div class="solution-points"><span>空结果反馈</span><span>下一步提示</span><span>降低停顿</span></div>
+          </div>
+        </article>
+
+        <article class="solution-step cursor-target" style="--accent: #dc2626; transform: translate3d(0px, 0px, 0px) scale(1); z-index: 6;">
+          <figure class="solution-shot">
+            <img src="assets/4、必填校验提示@2x.png" alt="启动流程前的必填校验提示">
+          </figure>
+          <div class="solution-copy">
+            <span class="solution-index">06 / Validation</span>
+            <h3>提交前暴露必填校验</h3>
+            <p>对于缺少成员或未完成配置的节点，系统在当前层级给出必填校验提示。用户不用等提交失败后再回头排查，可以在启动前完成修正。</p>
+            <div class="solution-points"><span>必填校验</span><span>节点定位</span><span>提交前修正</span></div>
+          </div>
+        </article>
+
+        <article class="solution-step cursor-target" style="--accent: #111827; transform: translate3d(0px, 0px, 0px) scale(1); z-index: 7;">
+          <figure class="solution-shot">
+            <img src="assets/审批流程.png" alt="流程启动后的审批处理界面">
+          </figure>
+          <div class="solution-copy">
+            <span class="solution-index">07 / Approval loop</span>
+            <h3>启动后进入审批任务闭环</h3>
+            <p>流程启动后进入审批处理阶段，任务节点、处理动作和状态变化继续被记录。方案最终从“启动前配置”延伸到“启动后追踪”，形成完整工作流闭环。</p>
+            <div class="solution-points"><span>审批任务</span><span>状态记录</span><span>流程闭环</span></div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <div class="soft-band">
+      <section class="section" id="result">
+        <div class="section-head">
+          <div class="kicker">07 / Result</div>
+          <h2>从发起入口<br>到可判断的状态系统</h2>
+          <p class="section-desc">让复杂流程在启动前可判断、启动中可配置、启动后可追踪。</p>
+        </div>
+        <div class="result-panel" aria-label="项目结果总结">
+          <aside class="result-feature">
+            <div>
+              <span>Outcome Logic</span>
+              <h3>结果不是页面完成，而是流程状态被建立。</h3>
+            </div>
+          </aside>
+          <div class="result-proof-grid">
+            <article class="result-proof cursor-target">
+              <div class="result-proof-head">
+                <code>01</code>
+                <em>Business impact</em>
+                <h3>业务结果</h3>
+              </div>
+              <p><strong>流程启动完成率和发起成功率更容易被验证。</strong> 对象级流程记录也为后续追踪和管理提供统一入口。</p>
+            </article>
+            <article class="result-proof cursor-target">
+              <div class="result-proof-head">
+                <code>02</code>
+                <em>UX impact</em>
+                <h3>体验结果</h3>
+              </div>
+              <p><strong>用户不再依赖弹窗反复核对节点成员。</strong> 成员身份、数量、完整性和必填状态都回到当前页判断。</p>
+            </article>
+            <article class="result-proof cursor-target">
+              <div class="result-proof-head">
+                <code>03</code>
+                <em>Design takeaway</em>
+                <h3>我的收获</h3>
+              </div>
+              <p><strong>复杂 B 端设计需要先建立规则秩序，再做页面表达。</strong></p>
+            </article>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <span>一杯豆奶作品集 / 工作项目案例</span>
+      <span>业务对象工作流体验优化</span>
+    </div>
+  </footer>
+  <script>
+    (() => {
+      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const headings = Array.from(document.querySelectorAll('.hero h1, .section-head h2'));
+
+      if (!headings.length) return;
+
+      const splitHeading = heading => {
+        if (heading.dataset.splitTextReady === 'true') return;
+
+        const originalText = heading.textContent.trim();
+        const nodes = Array.from(heading.childNodes);
+        const fragment = document.createDocumentFragment();
+        let line = document.createElement('span');
+        let charIndex = 0;
+
+        line.className = 'split-line';
+
+        const appendLine = () => {
+          fragment.appendChild(line);
+          line = document.createElement('span');
+          line.className = 'split-line';
+        };
+
+        nodes.forEach(node => {
+          if (node.nodeName === 'BR') {
+            appendLine();
+            return;
+          }
+
+          if (node.nodeType !== Node.TEXT_NODE) {
+            line.appendChild(node.cloneNode(true));
+            return;
+          }
+
+          Array.from(node.textContent).forEach(char => {
+            const span = document.createElement('span');
+            span.className = 'split-char';
+            span.style.setProperty('--char-index', charIndex);
+            span.textContent = char === ' ' ? '\u00A0' : char;
+            line.appendChild(span);
+            charIndex += 1;
+          });
+        });
+
+        fragment.appendChild(line);
+        heading.textContent = '';
+        heading.appendChild(fragment);
+        heading.classList.add('split-parent');
+        heading.setAttribute('aria-label', originalText);
+        heading.dataset.splitTextReady = 'true';
+
+        if (reduceMotion) {
+          heading.classList.add('is-split-visible');
+        } else {
+          heading.classList.add('is-split-ready');
+        }
+      };
+
+      const initSplitText = () => {
+        headings.forEach(splitHeading);
+
+        if (reduceMotion) return;
+
+        const observer = new IntersectionObserver(entries => {
+          entries.forEach(entry => {
+            if (!entry.isIntersecting) return;
+            entry.target.classList.add('is-split-visible');
+            observer.unobserve(entry.target);
+          });
+        }, {
+          threshold: 0.18,
+          rootMargin: '0px 0px -10% 0px'
+        });
+
+        headings.forEach(heading => observer.observe(heading));
+      };
+
+      if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(initSplitText);
+      } else {
+        initSplitText();
+      }
+    })();
+
+    (() => {
+      const navLinks = Array.from(document.querySelectorAll('.nav-links a[href^="#"]'));
+      const sections = navLinks
+        .map(link => document.querySelector(link.getAttribute('href')))
+        .filter(Boolean);
+
+      if (!navLinks.length || !sections.length) return;
+
+      const setActive = id => {
+        navLinks.forEach(link => {
+          const isActive = link.getAttribute('href') === `#${id}`;
+          link.classList.toggle('is-active', isActive);
+          link.toggleAttribute('aria-current', isActive);
+        });
+      };
+
+      const updateActiveNav = () => {
+        const navHeight = document.querySelector('.nav')?.offsetHeight || 64;
+        const anchorLine = window.scrollY + navHeight + Math.min(180, window.innerHeight * .26);
+        let current = sections[0];
+
+        sections.forEach(section => {
+          const sectionTop = section.getBoundingClientRect().top + window.scrollY;
+          if (sectionTop <= anchorLine) {
+            current = section;
+          }
+        });
+
+        setActive(current.id);
+      };
+
+      updateActiveNav();
+      window.addEventListener('scroll', updateActiveNav, { passive: true });
+      window.addEventListener('resize', updateActiveNav);
+    })();
+
+    (() => {
+      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const isNarrow = window.matchMedia('(max-width: 720px)').matches;
+      const cards = Array.from(document.querySelectorAll('.solution-step'));
+
+      if (!cards.length || reduceMotion || isNarrow) return;
+
+      let ticking = false;
+      const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+
+      const updateStack = () => {
+        const viewport = window.innerHeight || 720;
+
+        cards.forEach((card, index) => {
+          const rect = card.getBoundingClientRect();
+          const stickyTop = parseFloat(window.getComputedStyle(card).top) || 92;
+          const progress = clamp((stickyTop - rect.top) / (viewport * .56), 0, 1);
+          const scale = 1 - progress * .026;
+          const y = progress * -4;
+
+          card.style.transform = `translate3d(0, ${y}px, 0) scale(${scale})`;
+          card.style.zIndex = String(index + 1);
+        });
+
+        ticking = false;
+      };
+
+      const requestUpdate = () => {
+        if (ticking) return;
+        ticking = true;
+        requestAnimationFrame(updateStack);
+      };
+
+      updateStack();
+      window.addEventListener('scroll', requestUpdate, { passive: true });
+      window.addEventListener('resize', requestUpdate);
+    })();
+
+    (() => {
+      const canUseCursor = window.matchMedia('(pointer: fine)').matches &&
+        !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      if (!canUseCursor) return;
+
+      const cursor = document.createElement('div');
+      cursor.className = 'target-cursor-wrapper';
+      cursor.innerHTML = `
+        <div class="target-cursor-dot"></div>
+        <div class="target-cursor-corner corner-tl"></div>
+        <div class="target-cursor-corner corner-tr"></div>
+        <div class="target-cursor-corner corner-br"></div>
+        <div class="target-cursor-corner corner-bl"></div>
+      `;
+      document.body.appendChild(cursor);
+      document.body.classList.add('target-cursor-enabled');
+
+      const corners = Array.from(cursor.querySelectorAll('.target-cursor-corner'));
+      const cornerSize = 13;
+      const borderOffset = 4;
+      const defaultCorners = [
+        { x: -18, y: -18 },
+        { x: 5, y: -18 },
+        { x: 5, y: 5 },
+        { x: -18, y: 5 }
+      ];
+
+      let mouseX = window.innerWidth / 2;
+      let mouseY = window.innerHeight / 2;
+      let cursorX = mouseX;
+      let cursorY = mouseY;
+      let activeTarget = null;
+      let rotation = 0;
+      let displayRotation = 0;
+      let isPressed = false;
+      let isCursorActive = true;
+      const cornerState = defaultCorners.map(point => ({ ...point }));
+
+      const lerp = (start, end, amount) => start + (end - start) * amount;
+      const getTarget = () => {
+        const element = document.elementFromPoint(mouseX, mouseY);
+        return element ? element.closest('.cursor-target') : null;
+      };
+
+      const getCornerTargets = () => {
+        if (!activeTarget) {
+          return defaultCorners;
+        }
+
+        const rect = activeTarget.getBoundingClientRect();
+        return [
+          { x: rect.left - borderOffset - cursorX, y: rect.top - borderOffset - cursorY },
+          { x: rect.right + borderOffset - cornerSize - cursorX, y: rect.top - borderOffset - cursorY },
+          { x: rect.right + borderOffset - cornerSize - cursorX, y: rect.bottom + borderOffset - cornerSize - cursorY },
+          { x: rect.left - borderOffset - cursorX, y: rect.bottom + borderOffset - cornerSize - cursorY }
+        ];
+      };
+
+      const updateActiveTarget = () => {
+        const nextTarget = getTarget();
+        if (nextTarget === activeTarget) return;
+        activeTarget = nextTarget;
+        cursor.classList.toggle('is-targeting', Boolean(activeTarget));
+      };
+
+      window.addEventListener('mousemove', event => {
+        mouseX = event.clientX;
+        mouseY = event.clientY;
+        cursor.classList.add('is-visible');
+        updateActiveTarget();
+      }, { passive: true });
+
+      window.addEventListener('mousedown', () => {
+        isPressed = true;
+      });
+
+      window.addEventListener('mouseup', () => {
+        isPressed = false;
+      });
+
+      window.addEventListener('scroll', updateActiveTarget, { passive: true });
+      window.addEventListener('resize', updateActiveTarget);
+      const pauseCursor = () => {
+        isCursorActive = false;
+        rotation = displayRotation;
+        cursor.classList.remove('is-visible');
+      };
+
+      const resumeCursor = () => {
+        isCursorActive = true;
+        rotation = displayRotation;
+      };
+
+      document.addEventListener('mouseleave', pauseCursor);
+      document.addEventListener('mouseenter', () => {
+        resumeCursor();
+        cursor.classList.add('is-visible');
+      });
+      window.addEventListener('blur', pauseCursor);
+      window.addEventListener('focus', resumeCursor);
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) pauseCursor();
+        else resumeCursor();
+      });
+
+      const tick = () => {
+        cursorX = lerp(cursorX, mouseX, 0.24);
+        cursorY = lerp(cursorY, mouseY, 0.24);
+        const scale = isPressed ? 0.92 : 1;
+        if (isCursorActive && !activeTarget) rotation += 0.55;
+        displayRotation = lerp(displayRotation, activeTarget ? 0 : rotation, activeTarget ? 0.22 : 0.08);
+        cursor.style.transform = `translate3d(${cursorX}px, ${cursorY}px, 0) rotate(${displayRotation}deg) scale(${scale})`;
+
+        const targets = getCornerTargets();
+        const strength = activeTarget ? 0.28 : 0.24;
+        corners.forEach((corner, index) => {
+          cornerState[index].x = lerp(cornerState[index].x, targets[index].x, strength);
+          cornerState[index].y = lerp(cornerState[index].y, targets[index].y, strength);
+          corner.style.transform = `translate3d(${cornerState[index].x}px, ${cornerState[index].y}px, 0)`;
+        });
+
+        requestAnimationFrame(tick);
+      };
+
+      requestAnimationFrame(tick);
+    })();
+  </script>
+</body></html>
+
+
