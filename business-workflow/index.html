@@ -2871,6 +2871,57 @@
       }
     }
 
+    .page-transition {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      display: grid;
+      place-items: center;
+      background: rgba(12, 12, 12, .86);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 260ms ease;
+    }
+
+    .page-transition.is-active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .page-transition__inner {
+      display: grid;
+      gap: 14px;
+      justify-items: center;
+      color: rgba(247, 247, 234, .72);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+    }
+
+    .page-transition__line {
+      width: 128px;
+      height: 1px;
+      overflow: hidden;
+      background: rgba(247, 247, 234, .18);
+    }
+
+    .page-transition__line::before {
+      content: "";
+      display: block;
+      width: 46%;
+      height: 100%;
+      background: rgba(247, 247, 234, .78);
+      animation: transition-line 760ms ease-in-out infinite;
+    }
+
+    @keyframes transition-line {
+      0% { transform: translateX(-110%); }
+      100% { transform: translateX(260%); }
+    }
+
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after {
         scroll-behavior: auto !important;
@@ -2879,10 +2930,16 @@
       }
     }
   </style></head>
-<body id="top">
+<body id="top" data-transition-tone="light">
+  <div class="page-transition" aria-hidden="true">
+    <div class="page-transition__inner">
+      <span>Opening...</span>
+      <span class="page-transition__line"></span>
+    </div>
+  </div>
   <nav class="nav" aria-label="项目页导航">
     <div class="nav-inner">
-      <a class="brand cursor-target" href="#top" aria-label="返回页面顶部">
+      <a class="brand cursor-target" href="../index.html" aria-label="返回首页" data-transition>
         <img class="brand-logo" src="../assets/logo.svg" alt="" aria-hidden="true">
         <span>一杯豆奶</span>
       </a>
@@ -2893,7 +2950,7 @@
         <a class="cursor-target" href="#solution">方案</a>
         <a class="cursor-target" href="#result">结果</a>
       </div>
-      <a class="nav-action cursor-target" href="../ai-workflow/index.html">Next</a>
+      <a class="nav-action cursor-target" href="../ai-workflow/index.html" data-transition>Next</a>
     </div>
   </nav>
 
@@ -3959,6 +4016,24 @@
 
       requestAnimationFrame(tick);
     })();
+
+    const initPageTransition = () => {
+      const transition = document.querySelector(".page-transition");
+      if (!transition) return;
+      document.querySelectorAll("a[data-transition]").forEach((link) => {
+        link.addEventListener("click", (event) => {
+          if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+          const href = link.getAttribute("href");
+          if (!href || href.startsWith("#") || link.target === "_blank") return;
+          event.preventDefault();
+          transition.classList.add("is-active");
+          window.setTimeout(() => {
+            window.location.href = link.href;
+          }, 280);
+        });
+      });
+    };
+    initPageTransition();
   </script>
 </body></html>
 

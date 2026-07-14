@@ -732,6 +732,57 @@
       .footer { flex-direction: column; min-height: 64px; padding: 0 16px; }
     }
 
+    .page-transition {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      display: grid;
+      place-items: center;
+      background: rgba(7, 7, 7, .72);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 260ms ease;
+    }
+
+    .page-transition.is-active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .page-transition__inner {
+      display: grid;
+      gap: 14px;
+      justify-items: center;
+      color: rgba(247, 247, 234, .72);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+    }
+
+    .page-transition__line {
+      width: 128px;
+      height: 1px;
+      overflow: hidden;
+      background: rgba(247, 247, 234, .18);
+    }
+
+    .page-transition__line::before {
+      content: "";
+      display: block;
+      width: 46%;
+      height: 100%;
+      background: var(--active);
+      animation: transition-line 760ms ease-in-out infinite;
+    }
+
+    @keyframes transition-line {
+      0% { transform: translateX(-110%); }
+      100% { transform: translateX(260%); }
+    }
+
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after {
         animation-duration: 1ms !important;
@@ -749,7 +800,13 @@
     }
   </style>
 </head>
-<body id="top">
+<body id="top" data-transition-tone="dark">
+  <div class="page-transition" aria-hidden="true">
+    <div class="page-transition__inner">
+      <span>Opening...</span>
+      <span class="page-transition__line"></span>
+    </div>
+  </div>
   <div class="cursor" id="cursor">OPEN</div>
   <header class="topbar">
     <a class="brand" href="#top" aria-label="返回页面顶部">
@@ -774,22 +831,22 @@
         <p class="lead">复杂场景中的体验秩序与用户判断，决定设计能否<br>从问题走向落地；AI 工作流则让验证和迭代更快发生。</p>
         <div class="actions">
           <a class="btn primary" href="#about">查看个人简介</a>
-      <a class="btn" href="business-workflow/index.html">进入工作项目</a>
+      <a class="btn" href="business-workflow/index.html" data-transition>进入工作项目</a>
         </div>
       </div>
 
       <div class="poster-board reveal">
-        <a class="poster-card is-active" href="business-workflow/index.html" data-color="#d7ff38" data-tilt="-4deg">
+        <a class="poster-card is-active" href="business-workflow/index.html" data-color="#d7ff38" data-tilt="-4deg" data-transition>
           <span class="num">01</span>
           <span class="copy"><h2>工作项目</h2><p>真实业务场景中的问题定义、交互策略、设计判断与落地结果。</p></span>
           <span class="side">Case Work</span>
         </a>
-        <a class="poster-card" href="ai-workflow/index.html" data-color="#1e7bff" data-tilt="3deg">
+        <a class="poster-card" href="ai-workflow/index.html" data-color="#1e7bff" data-tilt="3deg" data-transition>
           <span class="num">02</span>
           <span class="copy"><h2>AI 设计工作流</h2><p>从调研、生成、原型到交付，用 AI 重组设计过程的效率与质量。</p></span>
           <span class="side">AI Workflow</span>
         </a>
-        <a class="poster-card" href="travel-journal/index.html" data-color="#ff3b78" data-tilt="-7deg">
+        <a class="poster-card" href="travel-journal/index.html" data-color="#ff3b78" data-tilt="-7deg" data-transition>
           <span class="num">03</span>
           <span class="copy"><h2>视觉档案</h2><p>影像、日常与视觉样本，整理那些影响审美和判断的经验。</p></span>
           <span class="side">Vibe Archive</span>
@@ -991,6 +1048,24 @@
       requestAnimationFrame(updateRope);
     };
     initElasticLanyard();
+
+    const initPageTransition = () => {
+      const transition = document.querySelector(".page-transition");
+      if (!transition) return;
+      document.querySelectorAll("a[data-transition]").forEach((link) => {
+        link.addEventListener("click", (event) => {
+          if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+          const href = link.getAttribute("href");
+          if (!href || href.startsWith("#") || link.target === "_blank") return;
+          event.preventDefault();
+          transition.classList.add("is-active");
+          window.setTimeout(() => {
+            window.location.href = link.href;
+          }, 280);
+        });
+      });
+    };
+    initPageTransition();
 
     const observer = new IntersectionObserver((entries) => {
       entries.forEach((entry) => {

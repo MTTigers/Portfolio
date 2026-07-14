@@ -2270,6 +2270,33 @@
       z-index: 2;
     }
 
+    .preview-viewport::before {
+      content: "Loading preview...";
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      display: grid;
+      place-items: center;
+      color: rgba(17, 17, 17, .48);
+      font: 800 11px/1 var(--latin-font);
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      background:
+        linear-gradient(90deg, transparent, rgba(37, 99, 235, .14), transparent),
+        linear-gradient(135deg, rgba(245,245,245,.94), rgba(255,255,255,.72));
+      background-size: 220% 100%, auto;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .24s ease;
+      animation: media-loading-sweep 1.1s ease-in-out infinite;
+    }
+
+    .preview-viewport.is-loading::before,
+    .video-stage.is-loading::before,
+    .video-stage.has-error::before {
+      opacity: 1;
+    }
+
     .prototype-frame {
       position: absolute;
       top: 0;
@@ -2706,6 +2733,7 @@
     }
 
     .video-stage {
+      position: relative;
       border-radius: var(--radius-lg) var(--radius-lg) 0 0;
       background: #f3f4f6;
       overflow: hidden;
@@ -2715,12 +2743,43 @@
       justify-content: center;
     }
 
+    .video-stage::before {
+      content: "Loading media...";
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      display: grid;
+      place-items: center;
+      color: rgba(17, 17, 17, .48);
+      font: 800 11px/1 var(--latin-font);
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      background:
+        linear-gradient(90deg, transparent, rgba(37, 99, 235, .12), transparent),
+        #f3f4f6;
+      background-size: 220% 100%, auto;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .24s ease;
+      animation: media-loading-sweep 1.1s ease-in-out infinite;
+    }
+
+    .video-stage.has-error::before {
+      content: "Media loading failed";
+      animation: none;
+    }
+
     .video-stage video {
       width: 100%;
       height: 100%;
       display: block;
       background: #f3f4f6;
       object-fit: contain;
+    }
+
+    @keyframes media-loading-sweep {
+      0% { background-position: 120% 0, 0 0; }
+      100% { background-position: -120% 0, 0 0; }
     }
 
     .video-tile strong {
@@ -3464,6 +3523,57 @@
       }
     }
 
+    .page-transition {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      display: grid;
+      place-items: center;
+      background: rgba(7, 7, 7, .72);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 260ms ease;
+    }
+
+    .page-transition.is-active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .page-transition__inner {
+      display: grid;
+      gap: 14px;
+      justify-items: center;
+      color: rgba(247, 247, 234, .72);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+    }
+
+    .page-transition__line {
+      width: 128px;
+      height: 1px;
+      overflow: hidden;
+      background: rgba(247, 247, 234, .18);
+    }
+
+    .page-transition__line::before {
+      content: "";
+      display: block;
+      width: 46%;
+      height: 100%;
+      background: var(--accent, #2563eb);
+      animation: transition-line 760ms ease-in-out infinite;
+    }
+
+    @keyframes transition-line {
+      0% { transform: translateX(-110%); }
+      100% { transform: translateX(260%); }
+    }
+
     @media (prefers-reduced-motion: reduce) {
       html {
         scroll-behavior: auto;
@@ -3484,11 +3594,17 @@
     }
   </style>
 </head>
-<body id="top">
+<body id="top" data-transition-tone="dark">
+  <div class="page-transition" aria-hidden="true">
+    <div class="page-transition__inner">
+      <span>Opening...</span>
+      <span class="page-transition__line"></span>
+    </div>
+  </div>
   <canvas id="clickSparkCanvas" aria-hidden="true"></canvas>
   <nav class="site-nav" aria-label="页面导航">
     <div class="nav-inner">
-      <a class="brand-mark" href="#top" aria-label="回到顶部">
+      <a class="brand-mark" href="../index.html" aria-label="返回首页" data-transition>
         <svg class="brand-logo" viewBox="0 0 20 20" aria-hidden="true" focusable="false">
           <path d="M10,0Q9.7545137,0,9.5093231,0.012045437Q9.2641325,0.024090873,9.0198288,0.04815273Q8.7755241,0.072214581,8.5326948,0.10823488Q8.2898655,0.14425519,8.0490961,0.19214717Q7.8083267,0.24003914,7.5701971,0.29968742Q7.3320684,0.35933572,7.0971532,0.43059659Q6.862237,0.50185746,6.6311011,0.58455926Q6.3999648,0.667261,6.1731653,0.76120454Q5.9463654,0.85514808,5.7244492,0.96010691Q5.502532,1.0650659,5.2860327,1.1807872Q5.0695333,1.2965086,4.8589725,1.4227138Q4.6484118,1.5489187,4.4442973,1.6853036Q4.2401829,1.8216884,4.0430064,1.9679244Q3.8458304,2.1141605,3.6560669,2.2698953Q3.4663033,2.4256301,3.28441,2.5904884Q3.1025169,2.755347,2.928932,2.928932Q2.755347,3.1025169,2.5904884,3.28441Q2.4256301,3.4663036,2.2698953,3.6560671Q2.1141605,3.8458304,1.9679244,4.0430069Q1.8216884,4.2401829,1.6853036,4.4442973Q1.5489187,4.6484118,1.4227135,4.8589725Q1.2965086,5.0695333,1.1807872,5.2860327Q1.0650659,5.502532,0.96010691,5.7244482Q0.85514808,5.9463654,0.76120454,6.1731648Q0.667261,6.3999643,0.5845592,6.6311007Q0.50185746,6.862237,0.43059659,7.0971532Q0.35933572,7.3320689,0.29968745,7.5701981Q0.24003914,7.8083277,0.19214717,8.0490971Q0.14425519,8.2898655,0.10823488,8.5326948Q0.072214581,8.7755241,0.04815273,9.0198288Q0.024090873,9.2641325,0.012045437,9.5093231Q0,9.7545137,0,10Q0,10.245486,0.012045437,10.490677Q0.024090873,10.735868,0.04815273,10.980172Q0.072214581,11.224476,0.10823488,11.467304Q0.14425519,11.710133,0.19214717,11.950903Q0.24003914,12.191671,0.29968742,12.429801Q0.35933572,12.667931,0.43059659,12.902846Q0.50185746,13.137762,0.58455926,13.368898Q0.667261,13.600033,0.76120454,13.826833Q0.85514808,14.053633,0.96010691,14.275549Q1.0650659,14.497466,1.1807872,14.713966Q1.2965086,14.930466,1.4227138,15.141026Q1.5489187,15.351585,1.6853036,15.5557Q1.8216884,15.759815,1.9679244,15.956991Q2.1141605,16.154167,2.2698953,16.343931Q2.4256301,16.533695,2.5904884,16.715588Q2.755347,16.897482,2.928932,17.071068Q3.1025169,17.244652,3.28441,17.409512Q3.4663036,17.574371,3.6560671,17.730106Q3.8458304,17.885841,4.0430069,18.032076Q4.2401829,18.17831,4.4442973,18.314695Q4.6484118,18.45108,4.8589725,18.577286Q5.0695333,18.703491,5.2860327,18.819212Q5.502532,18.934933,5.7244482,19.039892Q5.9463654,19.144852,6.1731648,19.238794Q6.3999643,19.332737,6.6311007,19.41544Q6.862237,19.498142,7.0971532,19.569403Q7.3320689,19.640663,7.5701981,19.700314Q7.8083277,19.75996,8.0490971,19.807854Q8.2898655,19.855745,8.5326948,19.891766Q8.7755241,19.927788,9.0198288,19.951849Q9.2641325,19.97591,9.5093231,19.987955Q9.7545137,20,10,20Q10.245486,20,10.490677,19.987955Q10.735868,19.97591,10.980172,19.951849Q11.224476,19.927786,11.467304,19.891764Q11.710133,19.855743,11.950903,19.807852Q12.191671,19.75996,12.429801,19.70031Q12.667931,19.640663,12.902846,19.569403Q13.137762,19.498142,13.368898,19.41544Q13.600033,19.332737,13.826833,19.238794Q14.053633,19.144852,14.275549,19.039892Q14.497466,18.934933,14.713966,18.819212Q14.930466,18.703491,15.141026,18.577284Q15.351585,18.451078,15.5557,18.314693Q15.759815,18.178308,15.956991,18.032074Q16.154167,17.885838,16.343931,17.730104Q16.533695,17.574369,16.715588,17.40951Q16.897482,17.244652,17.071068,17.071068Q17.244652,16.897482,17.409512,16.71559Q17.574371,16.533695,17.730106,16.343933Q17.885841,16.154169,18.032076,15.956992Q18.17831,15.759815,18.314695,15.5557Q18.45108,15.351585,18.577286,15.141026Q18.703491,14.930466,18.819212,14.713966Q18.934933,14.497466,19.039892,14.27555Q19.144852,14.053633,19.238794,13.826834Q19.332737,13.600034,19.41544,13.368897Q19.498142,13.137762,19.569403,12.902846Q19.640663,12.667931,19.700314,12.429801Q19.75996,12.191671,19.807854,11.950903Q19.855745,11.710133,19.891766,11.467304Q19.927788,11.224476,19.951849,10.980172Q19.97591,10.735868,19.987957,10.490677Q20,10.245486,20,10Q20,9.7545137,19.987957,9.5093231Q19.97591,9.2641325,19.951849,9.0198288Q19.927786,8.7755241,19.891764,8.5326948Q19.855743,8.2898655,19.807852,8.0490961Q19.75996,7.8083267,19.70031,7.5701971Q19.640663,7.3320684,19.569403,7.0971532Q19.498142,6.862237,19.41544,6.6311011Q19.332737,6.3999648,19.238794,6.1731653Q19.144852,5.9463654,19.039892,5.7244492Q18.934933,5.502532,18.819212,5.2860327Q18.703491,5.0695333,18.577284,4.8589725Q18.451078,4.6484118,18.314693,4.4442973Q18.178308,4.2401829,18.032074,4.0430064Q17.885838,3.8458304,17.730104,3.6560669Q17.574369,3.4663033,17.40951,3.28441Q17.244652,3.1025169,17.071068,2.928932Q16.897482,2.755347,16.71559,2.5904884Q16.533695,2.4256301,16.343933,2.2698953Q16.154169,2.1141605,15.956992,1.9679244Q15.759815,1.8216884,15.5557,1.6853036Q15.351585,1.5489187,15.141026,1.4227135Q14.930466,1.2965086,14.713966,1.1807872Q14.497466,1.0650659,14.27555,0.96010691Q14.053633,0.85514808,13.826834,0.76120454Q13.600034,0.667261,13.368897,0.5845592Q13.137762,0.50185746,12.902846,0.43059659Q12.667931,0.35933572,12.429801,0.29968745Q12.191671,0.24003914,11.950903,0.19214717Q11.710133,0.14425519,11.467304,0.10823488Q11.224476,0.072214581,10.980172,0.04815273Q10.735868,0.024090873,10.490677,0.012045437Q10.245486,0,10,0ZM11.126442,7.1320763L8.8490562,7.1320763L9.2880116,4.8973961C9.7249355,2.6730556,13,2.9916706,13,5.2585163C13,6.2932568,12.16118,7.1320763,11.126442,7.1320763ZM8.8490562,7.1320763L5.4016542,7.1320763C2.3366747,7.1320763,1.4505119,11.319521,4.2527304,12.561161L4.6667156,12.744595C6.118228,13.387747,7.7913027,12.516998,8.0973091,10.95915L8.8490562,7.1320763ZM16,14L9,14L9,15L16,15L16,14Z" fill="currentColor" fill-rule="evenodd"/>
         </svg>
@@ -3499,7 +3615,7 @@
         <a href="#prototype">原型验证</a>
         <a href="#system">组件落地</a>
       </div>
-      <a class="button secondary" href="../travel-journal/index.html">Next</a>
+      <a class="button secondary" href="../travel-journal/index.html" data-transition>Next</a>
     </div>
   </nav>
 
@@ -4605,6 +4721,41 @@ CAD 映射属性导入完成率 ↑：配置用户 / 管理员
     updateNavSurface();
     updatePrototypePreviewScale();
 
+    const initEmbeddedMediaLoading = () => {
+      document.querySelectorAll(".prototype-frame").forEach((frame) => {
+        const viewport = frame.closest(".preview-viewport");
+        if (!viewport) return;
+        viewport.classList.add("is-loading");
+        frame.addEventListener("load", () => {
+          viewport.classList.remove("is-loading");
+        }, { once: true });
+        try {
+          if (frame.contentDocument?.readyState === "complete") {
+            viewport.classList.remove("is-loading");
+          }
+        } catch (error) {}
+      });
+
+      document.querySelectorAll(".video-tile video, .page-video-card video").forEach((video) => {
+        const stage = video.closest(".video-stage");
+        if (!stage) return;
+        stage.classList.add("is-loading");
+        video.setAttribute("preload", "auto");
+        const clearLoading = () => {
+          stage.classList.remove("is-loading");
+        };
+        if (video.readyState >= 2) clearLoading();
+        video.addEventListener("loadeddata", clearLoading, { once: true });
+        video.addEventListener("canplay", clearLoading, { once: true });
+        video.addEventListener("error", () => {
+          stage.classList.remove("is-loading");
+          stage.classList.add("has-error");
+        }, { once: true });
+        video.load();
+      });
+    };
+    initEmbeddedMediaLoading();
+
     const observer = new IntersectionObserver((entries) => {
       entries.forEach((entry) => {
         if (entry.isIntersecting) {
@@ -4615,6 +4766,24 @@ CAD 映射属性导入完成率 ↑：配置用户 / 管理员
     }, { threshold: 0.16 });
 
     document.querySelectorAll(".fade-in").forEach((el) => observer.observe(el));
+
+    const initPageTransition = () => {
+      const transition = document.querySelector(".page-transition");
+      if (!transition) return;
+      document.querySelectorAll("a[data-transition]").forEach((link) => {
+        link.addEventListener("click", (event) => {
+          if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+          const href = link.getAttribute("href");
+          if (!href || href.startsWith("#") || link.target === "_blank") return;
+          event.preventDefault();
+          transition.classList.add("is-active");
+          window.setTimeout(() => {
+            window.location.href = link.href;
+          }, 280);
+        });
+      });
+    };
+    initPageTransition();
 
     document.querySelectorAll(".video-tile video, .page-video-card video").forEach((video) => {
       const card = video.closest(".video-tile, .page-video-card");
